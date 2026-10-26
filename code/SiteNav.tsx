@@ -10,6 +10,7 @@ import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, AnimatePresence } from "framer-motion"
 import { Page, Orb, Icon, Button, ROUTES, escape, moodById, useEscape, ease, FlightOrb } from "./EscapeKit.tsx"
+import JourneyBanner from "./JourneyBanner.tsx"
 
 type PageKey = "home" | "lucille" | "community" | "pricing" | "innerverse" | "beta" | "demo" | "legal" | "none"
 
@@ -90,6 +91,7 @@ export default function SiteNav(p: Props) {
                     </button>
                 </div>
             </nav>
+            <JourneyBanner />
             <AnimatePresence>
                 {open && (
                     <motion.div id="esc-menu" className="nav-sheet esc-glass" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.32, ease }}>

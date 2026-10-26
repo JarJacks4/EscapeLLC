@@ -2,6 +2,7 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
+import { TasteCard } from "./LucilleTaste.tsx"
 import { Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, Faq, ClosingCta, ROUTES, useEscape, moodById, ease } from "./EscapeKit.tsx"
 
 interface Props { primaryLabel: string; primaryHref: string }
@@ -40,11 +41,6 @@ function Hero(p: Props) {
     const s = useEscape()
     const reduce = useReducedMotion()
     const m = moodById(s.mood)
-    const lines = [
-        { me: true, t: m ? `I'm feeling ${m.label.toLowerCase()} today.` : "I don't really know how I feel today." },
-        { me: false, t: m && (m.id === "calm" || m.id === "energized" || m.id === "focused") ? "Love that. Want to make the most of it with something short that fits?" : "That's okay. We can start small. One slow breath with me, then we'll see what you need." },
-        { me: true, t: "Okay. Let's try." },
-    ]
     return (
         <section className="esc-sec lu-hero">
             <Backdrop top />
@@ -64,14 +60,7 @@ function Hero(p: Props) {
                 </motion.div>
                 <div className="lu-visual">
                     <Orb mood={s.mood} size="min(420px, 86%)" live rings hero label="Lucille, speaking" />
-                    <div className="lu-chat esc-glass" aria-label="Example conversation with Lucille">
-                        {lines.map((l, i) => (
-                            <motion.span key={`${s.mood}-${i}`} className={`bub ${l.me ? "me" : "lu"}`} initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease, delay: 0.6 + i * 0.9 }}>
-                                {l.t}
-                            </motion.span>
-                        ))}
-                        <span className="esc-small" style={{ fontSize: 12 }}>Example conversation</span>
-                    </div>
+                    <div className="lu-chat"><TasteCard ctaHref={p.primaryHref} ctaLabel={p.primaryLabel} /></div>
                 </div>
             </div>
         </section>
@@ -166,8 +155,9 @@ const LU_CSS = `
 .esc-sec.lu-hero{padding-top:clamp(120px,12cqi,168px)}
 .lu-hero-in{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(32px,5cqi,72px);align-items:center}
 .lu-pills{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
-.lu-visual{position:relative;display:grid;place-items:center;min-height:520px}
-.lu-chat{position:absolute;right:0;bottom:0;width:min(330px,80%);border-radius:24px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.lu-visual{position:relative;display:flex;flex-direction:column;align-items:center;gap:clamp(20px,3cqi,32px)}
+.lu-visual>[role=img]{width:min(300px,62%)!important}
+.lu-chat{position:relative;z-index:1;width:min(440px,100%)}
 .bub{max-width:90%;padding:11px 15px;border-radius:18px;font-size:15px;line-height:1.45}
 .bub.me{align-self:flex-end;background:color-mix(in oklab,var(--esc-accent) 24%,transparent);border-bottom-right-radius:6px}
 .bub.lu{align-self:flex-start;background:var(--esc-glass1);border:1px solid var(--esc-border);border-bottom-left-radius:6px}
@@ -184,7 +174,7 @@ const LU_CSS = `
 .bars span{flex:1;border-radius:99px;background:linear-gradient(var(--esc-accent),var(--esc-glowB));animation:lu-bar 1.4s var(--esc-ease) infinite alternate;transform-origin:center}
 @keyframes lu-bar{from{transform:scaleY(.35)}to{transform:scaleY(1)}}
 .lu-safety{display:flex;gap:20px;align-items:flex-start;border-radius:28px}
-@container (max-width:900px){.lu-hero-in,.lu-voice{grid-template-columns:minmax(0,1fr)}.lu-visual{min-height:420px}.lu-compare-head,.lu-compare-row{grid-template-columns:1fr}.lu-compare-head span:first-child{display:none}.lu-compare-row span:first-child{font-size:14px}}
+@container (max-width:900px){.lu-hero-in,.lu-voice{grid-template-columns:minmax(0,1fr)}.lu-visual>[role=img]{width:min(260px,64%)!important}.lu-chat{width:100%}.lu-compare-head,.lu-compare-row{grid-template-columns:1fr}.lu-compare-head span:first-child{display:none}.lu-compare-row span:first-child{font-size:14px}}
 `
 
 LucillePage.defaultProps = { primaryLabel: "Get early access", primaryHref: ROUTES.beta }

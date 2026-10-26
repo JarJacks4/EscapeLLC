@@ -5,7 +5,7 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { Page, Backdrop, Eyebrow, Button, SectionHead, Icon, Orb, ClosingCta, ROUTES, useEscape, easeSoft } from "./EscapeKit.tsx"
+import { Page, Backdrop, Eyebrow, Button, SectionHead, Icon, Orb, ClosingCta, ROUTES, useEscape, easeSoft, MEDIA_BASE, LINKS } from "./EscapeKit.tsx"
 
 const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
 
@@ -75,7 +75,7 @@ export default function DemoPage(p: Props) {
                         <h1 className="esc-d esc-h1">Discover the <span className="esc-gold">Escape</span> app</h1>
                         <p className="esc-lede">A real walk through the app, recorded on an iPhone. Press play, or jump to any chapter.</p>
                         <div className="esc-row" style={{ gap: 12 }}>
-                            <Button href={p.waitlistHref} arrow>Join the waitlist</Button>
+                            <Button href={p.waitlistHref} arrow>Apply for the beta</Button>
                             <Button href={ROUTES.pricing} variant="ghost">View pricing</Button>
                         </div>
                         <ol className="de-chapters" aria-label="Chapters">
@@ -178,7 +178,7 @@ const DE_CSS = `
 @container (max-width:900px){.de-grid{grid-template-columns:minmax(0,1fr)}.de-phone-wrap{order:-1}.de-chapters{max-width:none}}
 `
 
-DemoPage.defaultProps = { demoVideo: "", demoVideoWebm: "", demoPoster: "", captions: "", chapters: DEFAULT_CHAPTERS, waitlistHref: ROUTES.beta, crowdfundHref: "" }
+DemoPage.defaultProps = { demoVideo: MEDIA_BASE + "escape_demo.mp4", demoVideoWebm: "", demoPoster: MEDIA_BASE + "escape_demo_poster.webp", captions: "", chapters: DEFAULT_CHAPTERS, waitlistHref: ROUTES.beta, crowdfundHref: LINKS.kickstarter }
 addPropertyControls(DemoPage, {
     demoVideo: { type: ControlType.File, title: "Demo video", allowedFileTypes: ["mp4", "mov"] },
     demoVideoWebm: { type: ControlType.File, title: "Demo WebM", allowedFileTypes: ["webm"] },

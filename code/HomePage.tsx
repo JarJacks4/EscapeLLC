@@ -10,7 +10,7 @@ import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
 import {
     Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Wordmark, Icon, ClosingCta,
-    MOODS, CENTERS, COIN_RULES, ROUTES, SPLASH_POSTER, escape, useEscape, moodById, ease, type MoodId,
+    MOODS, CENTERS, COIN_RULES, ROUTES, SPLASH_POSTER, MEDIA_BASE, escape, useEscape, moodById, ease, type MoodId,
 } from "./EscapeKit.tsx"
 
 const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
@@ -422,9 +422,9 @@ const HOME_CSS = `
 `
 
 HomePage.defaultProps = {
-    splashVideo: "",
-    splashVideoWebm: "",
-    splashPoster: "",
+    splashVideo: MEDIA_BASE + "escape_splash.mp4",
+    splashVideoWebm: MEDIA_BASE + "escape_splash.webm",
+    splashPoster: MEDIA_BASE + "escape_splash_poster.webp",
     primaryLabel: "Start your journey",
     primaryHref: ROUTES.beta,
     demoHref: ROUTES.demo,

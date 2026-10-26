@@ -4,6 +4,7 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
+import { LINKS } from "./EscapeKit.tsx"
 import { Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, Faq, ClosingCta, CENTERS, COIN_RULES, ROUTES, useEscape, ease } from "./EscapeKit.tsx"
 
 interface Props { applyHref: string; ambassadorHref: string; primaryHref: string }
@@ -34,7 +35,7 @@ export default function CommunityPage(p: Props) {
                     ]} />
                 </div>
             </section>
-            <ClosingCta eyebrow="Escape community & creators" title={<>Ready to start your <span className="esc-gold">rewarding</span> journey?</>} lede="Join early, earn from day one, and help shape what Escape becomes." primary={{ label: "Get early access", href: p.primaryHref }} secondary={{ label: "Apply as a creator", href: p.applyHref }} />
+            <ClosingCta eyebrow="Escape community & creators" title={<>Ready to start your <span className="esc-gold">rewarding</span> journey?</>} lede="Join early, earn from day one, and help shape what Escape becomes." primary={{ label: "Get early access", href: p.primaryHref }} secondary={{ label: "Support on Kickstarter", href: LINKS.kickstarter }} />
         </Page>
     )
 }
@@ -148,26 +149,26 @@ function Creators({ applyHref, ambassadorHref }: { applyHref: string; ambassador
                 <SectionHead eyebrow="Verified creator studio" title="Mindful creators" lede="A creator community sharing genuine practices: breathwork, yoga, movement, reflection. Real people, real routines." />
                 <div className="esc-grid g2">
                     <Card className="esc-stack" style={{ gap: 14 }}>
-                        <span className="esc-chip" style={{ alignSelf: "flex-start" }}>Ambassador tier</span>
-                        <h3 className="esc-d esc-h3">Ambassadors</h3>
-                        <p className="esc-p">Represent Escape in your community, host challenges, and get early access to new features and Lucille builds.</p>
+                        <span className="esc-chip" style={{ alignSelf: "flex-start" }}>Creator studio</span>
+                        <h3 className="esc-d esc-h3">Creators</h3>
+                        <p className="esc-p">Make mindful content with Escape, host challenges in your community, and get early access to new features and Lucille builds.</p>
                         <ul className="co-list">
-                            <li><Icon name="check" size={18} />Founding ambassador badge</li>
+                            <li><Icon name="check" size={18} />Founding creator badge</li>
                             <li><Icon name="check" size={18} />Early feature access</li>
                             <li><Icon name="check" size={18} />A direct line to the Escape team</li>
                         </ul>
-                        <div style={{ marginTop: "auto" }}><Button href={ambassadorHref} arrow small>Become an ambassador</Button></div>
+                        <div style={{ marginTop: "auto" }}><Button href={ambassadorHref} arrow small newTab>Join the creator studio</Button></div>
                     </Card>
                     <Card className="esc-stack" style={{ gap: 14 }} delay={0.08}>
                         <span className="esc-chip" style={{ alignSelf: "flex-start" }}>Influencer program</span>
-                        <h3 className="esc-d esc-h3">Creators</h3>
+                        <h3 className="esc-d esc-h3">Influencers</h3>
                         <p className="esc-p">Share your mindfulness journey and inspire people authentically. We'll support your content and feature it in Escape.</p>
                         <ul className="co-list">
                             <li><Icon name="check" size={18} />Breathwork, yoga & movement shorts</li>
                             <li><Icon name="check" size={18} />Featured in the app</li>
                             <li><Icon name="check" size={18} />Partnership opportunities</li>
                         </ul>
-                        <div style={{ marginTop: "auto" }}><Button href={applyHref} arrow small>Apply now</Button></div>
+                        <div style={{ marginTop: "auto" }}><Button href={applyHref} arrow small newTab>Apply to the influencer program</Button></div>
                     </Card>
                 </div>
             </div>
@@ -209,9 +210,9 @@ const CO_CSS = `
 @container (max-width:900px){.co-hero-in{grid-template-columns:minmax(0,1fr)}.co-track ol{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.co-track li{flex-direction:row;text-align:left;flex-wrap:wrap;gap:4px 10px}.co-node{margin:0}.co-line{display:none}.co-toast{transform:scale(.88);transform-origin:left top;max-width:none}.co-visual .co-toast:nth-child(3),.co-visual .co-toast:nth-child(4){display:none}}
 `
 
-CommunityPage.defaultProps = { applyHref: "mailto:creators@escapeapp.ai?subject=Escape%20creators%20program", ambassadorHref: "mailto:creators@escapeapp.ai?subject=Escape%20ambassador", primaryHref: ROUTES.beta }
+CommunityPage.defaultProps = { applyHref: LINKS.influencers, ambassadorHref: LINKS.creators, primaryHref: ROUTES.beta }
 addPropertyControls(CommunityPage, {
-    applyHref: { type: ControlType.Link, title: "Creator apply link" },
-    ambassadorHref: { type: ControlType.Link, title: "Ambassador link" },
+    applyHref: { type: ControlType.Link, title: "Influencer program" },
+    ambassadorHref: { type: ControlType.Link, title: "Creator studio" },
     primaryHref: { type: ControlType.Link, title: "Main link" },
 })

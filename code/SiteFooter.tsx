@@ -1,7 +1,7 @@
 // Escape — site footer. Fill width, auto height, at the bottom of every page.
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
-import { Page, Button, StoreBadges, ROUTES, DISCLAIMER, Backdrop } from "./EscapeKit.tsx"
+import { Page, Button, StoreBadges, ROUTES, DISCLAIMER, Backdrop, LINKS } from "./EscapeKit.tsx"
 
 interface Props {
     tagline: string
@@ -14,6 +14,7 @@ interface Props {
     contactEmail: string
     instagramUrl: string
     tiktokUrl: string
+    linkedinUrl: string
 }
 
 /**
@@ -23,8 +24,8 @@ interface Props {
  */
 export default function SiteFooter(p: Props) {
     const cols = [
-        { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse]] },
-        { title: "Community", links: [["Coins & rewards", ROUTES.community], ["Creators program", `${ROUTES.community}#creators`], ["App testing", ROUTES.beta]] },
+        { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Kickstarter", LINKS.kickstarter]] },
+        { title: "Community", links: [["Coins & rewards", ROUTES.community], ["Creator studio", LINKS.creators], ["Influencer program", LINKS.influencers], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
         { title: "Company", links: [["Privacy Policy", ROUTES.privacy], ["Terms of Service", ROUTES.terms], ["Cookie Policy", ROUTES.cookies], ["Contact", `mailto:${p.contactEmail}`]] },
     ]
     return (
@@ -40,12 +41,13 @@ export default function SiteFooter(p: Props) {
                         <div className="esc-row" style={{ gap: 18 }}>
                             {p.instagramUrl && <a className="esc-link" href={p.instagramUrl} target="_blank" rel="noopener noreferrer">Instagram</a>}
                             {p.tiktokUrl && <a className="esc-link" href={p.tiktokUrl} target="_blank" rel="noopener noreferrer">TikTok</a>}
+                            {p.linkedinUrl && <a className="esc-link" href={p.linkedinUrl} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
                         </div>
                     </div>
                     {cols.map((c) => (
                         <nav key={c.title} aria-label={c.title} className="foot-col">
                             <h2 className="esc-over" style={{ margin: "0 0 14px" }}>{c.title}</h2>
-                            <ul>{c.links.map(([l, h]) => <li key={l}><a href={h}>{l}</a></li>)}</ul>
+                            <ul>{c.links.map(([l, h]) => { const ext = /^https?:/.test(h); return <li key={l}><a href={h} target={ext ? "_blank" : undefined} rel={ext ? "noopener noreferrer" : undefined}>{l}{ext && <span className="esc-sr"> (opens in a new tab)</span>}</a></li> })}</ul>
                         </nav>
                     ))}
                     <div className="esc-glass foot-access">
@@ -68,7 +70,7 @@ export default function SiteFooter(p: Props) {
 
 const FOOT_CSS = `
 .foot{position:relative;padding:clamp(56px,7cqi,88px) 0 28px;border-top:1px solid var(--esc-line)}
-.foot-in{display:grid;grid-template-columns:1.5fr repeat(3,1fr) 1.4fr;gap:clamp(24px,3cqi,40px);align-items:start}
+.foot-in{display:grid;grid-template-columns:1.4fr repeat(3,1fr) 1.3fr;gap:clamp(24px,3cqi,40px);align-items:start}
 .foot-brand{display:flex;flex-direction:column;gap:18px}
 .foot-mark{font-size:26px;letter-spacing:.14em;color:var(--esc-ink);text-decoration:none}
 .foot-mark sup{font-size:.45em;letter-spacing:0;margin-left:2px}
@@ -92,8 +94,9 @@ SiteFooter.defaultProps = {
     appStoreUrl: "",
     playUrl: "",
     contactEmail: "privacy@escapeapp.ai",
-    instagramUrl: "",
-    tiktokUrl: "",
+    instagramUrl: LINKS.instagram,
+    tiktokUrl: LINKS.tiktok,
+    linkedinUrl: LINKS.linkedin,
 }
 
 addPropertyControls(SiteFooter, {
@@ -107,4 +110,5 @@ addPropertyControls(SiteFooter, {
     contactEmail: { type: ControlType.String, title: "Contact email" },
     instagramUrl: { type: ControlType.Link, title: "Instagram" },
     tiktokUrl: { type: ControlType.Link, title: "TikTok" },
+    linkedinUrl: { type: ControlType.Link, title: "LinkedIn" },
 })

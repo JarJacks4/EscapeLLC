@@ -77,6 +77,42 @@ export const COIN_RULES = [
     { what: "Daily Energy Scan", coins: 10, cap: "once a day" },
 ]
 
+// ───────────────────────── Lucille API (public website endpoints) ─────────────────────────
+
+/** The Lucille API on Cloud Run. Only the no-login /v1/public/* routes are called from the site. */
+export const API_BASE = "https://lucille-861854898360.us-central1.run.app"
+
+/** POST to a public endpoint with a timeout. Never throws: { ok, status, data }. */
+export async function postPublic(path: string, body: unknown, timeoutMs = 15000): Promise<{ ok: boolean; status: number; data: any }> {
+    const base = (typeof window !== "undefined" && (window as any).__escapeApiBase) || API_BASE
+    const ctl = typeof AbortController !== "undefined" ? new AbortController() : null
+    const t = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null
+    try {
+        const r = await fetch(`${base}${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl?.signal })
+        let data: any = null
+        try { data = await r.json() } catch {}
+        return { ok: r.ok, status: r.status, data }
+    } catch {
+        return { ok: false, status: 0, data: null }
+    } finally {
+        if (t) clearTimeout(t)
+    }
+}
+
+// ───────────────────────── outside links (from escapeapp.ai) ─────────────────────────
+
+export const LINKS = {
+    kickstarter: "https://www.kickstarter.com/projects/escapeai/1005851183?ref=3ews8f&token=e5c676ed",
+    discord: "https://discord.gg/WnASA2SfA",
+    influencers: "https://escape-influencer.web.app/",
+    creators: "https://escape-creators.web.app/",
+    maze: "https://t.maze.co/513528542",
+    betaForm: "https://forms.gle/yLFiaTAdeg37AhJC6",
+    tiktok: "https://www.tiktok.com/@escapeapp",
+    instagram: "https://www.instagram.com/escapeappai",
+    linkedin: "https://www.linkedin.com/company/escapeappai/",
+}
+
 // ───────────────────────── routes ─────────────────────────
 
 export const ROUTES = {
@@ -483,9 +519,9 @@ function hexA(hex: string, a: number) {
  *  90 % of its circle, dead centre. */
 const ORB_GEO: Record<string, [number, number, number]> = {
     escape_calm_e50_t15_v3: [0.5026, 0.4484, 0.6476],
-    escape_focus_e85_t50_v3: [0.4757, 0.452, 0.6375],
+    escape_focus_e85_t50_v3: [0.464, 0.465, 0.62],
     escape_picks_e50_t15_v3: [0.5021, 0.4426, 0.5514],
-    escape_focus_e50_t85_v3: [0.4917, 0.4395, 0.7125],
+    escape_focus_e50_t85_v3: [0.465, 0.463, 0.63],
     escape_calm_e15_t50_v3: [0.4972, 0.4363, 0.5764],
     escape_calm_e15_t85_v3: [0.4979, 0.4367, 0.5861],
     escape_picks_e50_t50_v3: [0.5021, 0.4426, 0.5681],
@@ -498,12 +534,13 @@ const ORB_FIT = 0.9
 /**
  * H.264 fallback loops (the app's own offline loops, ~700 KB each, play in every browser).
  * Firebase currently holds only HEVC copies of the mood loops, which some browsers can't play.
- * Upload media/orbs/*.mp4 to Framer (or any host) and put the folder URL here, or set
- * window.__escapeOrbFallback before the site loads.
+ * They live in MEDIA_BASE/orbs/ (upload: see README), or set window.__escapeOrbFallback.
  */
-export let ORB_FALLBACK_BASE = ""
+/** Public media for the website (the same public bucket the app uses), folder web/. */
+export const MEDIA_BASE = "https://storage.googleapis.com/escape-self-care-505618-escape-media/web/"
+export let ORB_FALLBACK_BASE = MEDIA_BASE + "orbs/"
 /** Flip to true once the H.264 copies (…_720_h264.mp4) are uploaded to Firebase Storage. */
-export const ORB_HAS_H264 = false
+export const ORB_HAS_H264 = true
 const fallbackBase = () => (isBrowser && (window as any).__escapeOrbFallback) || ORB_FALLBACK_BASE
 
 function fitStyle(key: string): React.CSSProperties {
