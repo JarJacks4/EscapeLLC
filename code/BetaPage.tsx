@@ -2,7 +2,7 @@
 //
 // The flow (mirrors escapeapp.ai/beta-test, made into one guided journey):
 //   hero → why join → APPLY (4 short steps, on the page) → "You're on the list" with your place →
-//   what happens next → Discord + Maze → FAQ → support on Kickstarter.
+//   what happens next → Discord + Maze → FAQ → support on Indiegogo.
 // Applications go to POST /v1/public/beta-apply on the Lucille API (stored for the team, one per
 // email). If the API can't be reached, the visitor is offered the Google Form instead.
 import * as React from "react"
@@ -15,7 +15,7 @@ interface Props {
     reviewTime: string
     discordUrl: string
     mazeUrl: string
-    kickstarterUrl: string
+    indiegogoUrl: string
     fallbackFormUrl: string
     privacyHref: string
 }
@@ -38,10 +38,10 @@ export default function BetaPage(p: Props) {
                     <div className="esc-stack esc-serene" style={{ gap: 20, alignItems: "flex-start" }}>
                         <span className="esc-chip"><span className="esc-dot" aria-hidden />Limited spots available</span>
                         <h1 className="esc-d esc-h1">Join the <span className="esc-gold">Escape beta</span></h1>
-                        <p className="esc-lede">Help shape a calmer kind of self-care app. Get Lucille early, tell us what works, and get a founding tester badge plus one year of Premium on us.</p>
+                        <p className="esc-lede">Help shape a calmer kind of self-care app. Get Lucille early, tell us what works, and get a founding tester badge plus your first year of the Journey Pass free after launch.</p>
                         <div className="esc-row" style={{ gap: 12 }}>
                             <Button onClick={toApply} arrow>Apply in 2 minutes</Button>
-                            <Button href={p.kickstarterUrl} variant="ghost" newTab>Support on Kickstarter</Button>
+                            <Button href={p.indiegogoUrl} variant="ghost" newTab>Support on Indiegogo</Button>
                         </div>
                         <ul className="be-trust">
                             <li><Icon name="check" size={18} />Free to join</li>
@@ -71,7 +71,7 @@ export default function BetaPage(p: Props) {
                     <div className="esc-grid g3">
                         <Feature icon="spark" title="Early access" body="Try Lucille, new sessions and features before anyone else." />
                         <Feature icon="chat" title="Direct influence" body="Your feedback goes straight to the team and shapes what ships." delay={0.05} />
-                        <Feature icon="gift" title="Exclusive perks" body="One year of Premium on us and a founding tester badge in the app." delay={0.1} />
+                        <Feature icon="gift" title="Exclusive perks" body="Your first year of the Journey Pass free after launch, and a founding tester badge in the app." delay={0.1} />
                     </div>
                 </div>
             </section>
@@ -92,7 +92,7 @@ export default function BetaPage(p: Props) {
                             { icon: "check" as IconName, t: "We review", b: `Every application is read, and you'll hear back within ${p.reviewTime}.` },
                             { icon: "apple" as IconName, t: "You get access", b: "Your download link (TestFlight on iPhone, Google Play testing on Android), setup steps and a Discord invite." },
                             { icon: "calendar" as IconName, t: "You test", b: `Use Escape the way you normally would for about ${p.testLength}. Join a few short Maze studies if you like.` },
-                            { icon: "gift" as IconName, t: "You're rewarded", b: "One year of Premium on us and your founding tester badge." },
+                            { icon: "gift" as IconName, t: "You're rewarded", b: "Your first Journey Pass year free after launch, and your founding tester badge." },
                         ].map((st, i) => (
                             <Reveal key={st.t} as="li" delay={i * 0.06} className="esc-glass be-step">
                                 <span className="be-num esc-d">{i + 1}</span>
@@ -141,10 +141,10 @@ export default function BetaPage(p: Props) {
                     <Reveal className="esc-glass esc-glow be-ks">
                         <div className="esc-stack" style={{ gap: 8 }}>
                             <span className="esc-over">Can't wait for a spot?</span>
-                            <h2 className="esc-d" style={{ fontSize: "clamp(26px,3cqi,36px)", margin: 0 }}>Back Escape on Kickstarter</h2>
+                            <h2 className="esc-d" style={{ fontSize: "clamp(26px,3cqi,36px)", margin: 0 }}>Back Escape on Indiegogo</h2>
                             <p className="esc-p">Supporters get exclusive early access and help bring Lucille to everyone.</p>
                         </div>
-                        <Button href={p.kickstarterUrl} newTab arrow>Support the campaign</Button>
+                        <Button href={p.indiegogoUrl} newTab arrow>Support the campaign</Button>
                     </Reveal>
                 </div>
             </section>
@@ -158,7 +158,7 @@ const GOALS: { id: string; label: string }[] = [
     { id: "focus", label: "Find focus" }, { id: "slow_down", label: "Slow down" }, { id: "sleep", label: "Sleep better" },
     { id: "lighter", label: "Feel lighter" }, { id: "move", label: "Move my body" }, { id: "kind", label: "Be kind to myself" }, { id: "explore", label: "Just explore" },
 ]
-const SOURCES = ["TikTok", "Instagram", "A friend", "Kickstarter", "Discord", "LinkedIn", "Other"]
+const SOURCES = ["TikTok", "Instagram", "A friend", "Indiegogo", "Discord", "LinkedIn", "Other"]
 const STEPS = ["You", "Your phone", "What you'd love", "Stay in touch"]
 
 interface Form { name: string; email: string; age: boolean; device: "" | "iphone" | "android" | "both"; deviceModel: string; goals: string[]; source: string; discord: boolean; maze: boolean; consent: boolean }
@@ -229,7 +229,7 @@ function ApplyFlow(p: Props) {
                 </ol>
                 <div className="esc-row" style={{ gap: 10, justifyContent: "center" }}>
                     <Button href={p.discordUrl} newTab arrow>Join the Discord now</Button>
-                    <Button href={p.kickstarterUrl} variant="ghost" newTab>Support on Kickstarter</Button>
+                    <Button href={p.indiegogoUrl} variant="ghost" newTab>Support on Indiegogo</Button>
                 </div>
             </motion.div>
         )
@@ -435,7 +435,7 @@ BetaPage.defaultProps = {
     reviewTime: "48 hours",
     discordUrl: LINKS.discord,
     mazeUrl: LINKS.maze,
-    kickstarterUrl: LINKS.kickstarter,
+    indiegogoUrl: LINKS.indiegogo,
     fallbackFormUrl: LINKS.betaForm,
     privacyHref: ROUTES.privacy,
 }
@@ -444,7 +444,7 @@ addPropertyControls(BetaPage, {
     reviewTime: { type: ControlType.String, title: "Review time" },
     discordUrl: { type: ControlType.Link, title: "Discord" },
     mazeUrl: { type: ControlType.Link, title: "Maze" },
-    kickstarterUrl: { type: ControlType.Link, title: "Kickstarter" },
+    indiegogoUrl: { type: ControlType.Link, title: "Indiegogo" },
     fallbackFormUrl: { type: ControlType.Link, title: "Backup form" },
     privacyHref: { type: ControlType.Link, title: "Privacy link" },
 })

@@ -9,7 +9,7 @@ import { journey, type Journey } from "./PathGate.tsx"
 const MAP = [
     { href: ROUTES.home, page: "Home", line: "Everything Escape does" },
     { href: ROUTES.lucille, page: "Lucille AI", line: "Your AI companion" },
-    { href: ROUTES.community, page: "Community", line: "Coins, levels, creators" },
+    { href: ROUTES.marketplace, page: "Marketplace", line: "Coins, levels, rewards" },
     { href: ROUTES.pricing, page: "Pricing", line: "One pass, 7 days free" },
     { href: ROUTES.demo, page: "App Demo", line: "3-minute video" },
     { href: ROUTES.innerverse, page: "Innerverse", line: "3D worlds, coming soon" },

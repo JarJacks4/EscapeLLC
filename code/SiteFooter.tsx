@@ -24,8 +24,8 @@ interface Props {
  */
 export default function SiteFooter(p: Props) {
     const cols = [
-        { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Kickstarter", LINKS.kickstarter]] },
-        { title: "Community", links: [["Coins & rewards", ROUTES.community], ["Creator studio", LINKS.creators], ["Influencer program", LINKS.influencers], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
+        { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Indiegogo", LINKS.indiegogo]] },
+        { title: "Rewards", links: [["Marketplace", ROUTES.marketplace], ["Influencer program", LINKS.influencers], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
         { title: "Company", links: [["Privacy Policy", ROUTES.privacy], ["Terms of Service", ROUTES.terms], ["Cookie Policy", ROUTES.cookies], ["Contact", `mailto:${p.contactEmail}`]] },
     ]
     return (

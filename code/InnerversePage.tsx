@@ -1,14 +1,14 @@
 // Escape — Innerverse (coming soon) page body. Fill width, auto height.
-// The world "postcards" are pure CSS gradients so there are no stock images to license; swap
-// in real renders later with the image props.
+// World screenshots: each world card has an image slot (property controls). Until real renders
+// are dropped in, the card shows a clearly labeled placeholder.
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
-import { Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, ClosingCta, ROUTES, ease } from "./EscapeKit.tsx"
+import { Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, Faq, ClosingCta, ROUTES, ease } from "./EscapeKit.tsx"
 
 const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
 
-interface Props { waitlistHref: string; santoriniImage: any; costaRicaImage: any }
+interface Props { waitlistHref: string; santoriniImage: any; costaRicaImage: any; world1: any; world2: any; world3: any; world4: any; world5: any; world6: any }
 
 const REALMS = [
     { name: "Enchanted Forest", body: "Sun-dappled ancient redwoods and whispering foliage for grounding.", g: "linear-gradient(160deg,#1E5B3A,#0C2A1E 60%,#08160F)", glow: "#7ED6A1" },
@@ -38,10 +38,21 @@ export default function InnerversePage(p: Props) {
                     </motion.div>
                     <span className="esc-soon">Coming soon</span>
                     <h1 className="esc-d esc-h1">The Escape <span className="esc-gold">Innerverse</span></h1>
-                    <p className="esc-lede" style={{ margin: "0 auto" }}>Where mindfulness meets movement: an immersive 3D sanctuary that reflects how you feel, with worlds to explore, an avatar that grows with you, and Lucille as your guide.</p>
+                    <p className="esc-lede" style={{ margin: "0 auto" }}>The Innerverse is a 3D world inside Escape. Create your own avatar, explore calming worlds, play mini games and meet people from around the world, with Lucille as your guide.</p>
                     <div className="esc-row" style={{ gap: 12, justifyContent: "center" }}>
                         <Button href={p.waitlistHref} arrow>Join the waitlist</Button>
                         <Button href="#worlds" variant="ghost">Explore the worlds</Button>
+                    </div>
+                </div>
+            </section>
+
+            <section className="esc-sec">
+                <div className="esc-wrap">
+                    <SectionHead center eyebrow="What it is" title="What you'll do in the Innerverse" lede="Three things you can count on when it opens." />
+                    <div className="esc-grid g3">
+                        <Feature icon="users" title="Create your own avatar" body="Design an avatar that looks and feels like you, then dress it with items you earn in the Marketplace." />
+                        <Feature icon="star" title="Play mini games" body="Short, calming mini games inside each world: breathing challenges, puzzles and quests." delay={0.05} />
+                        <Feature icon="globe" title="Meet people worldwide" body="Explore worlds together and connect with people from around the world who are building calmer habits too." delay={0.1} />
                     </div>
                 </div>
             </section>
@@ -59,22 +70,24 @@ export default function InnerversePage(p: Props) {
             <section className="esc-sec">
                 <Backdrop intensity={0.55} />
                 <div className="esc-wrap">
-                    <SectionHead center eyebrow="Six immersive realms · coming soon" title="Journey through sacred spaces" lede="Each world supports a different part of your wellbeing." />
+                    <SectionHead center eyebrow="Six worlds · screenshots" title="See the worlds" lede="A look at each world in the Innerverse. Each one supports a different part of your wellbeing." />
                     <div className="esc-grid g3">
-                        {REALMS.map((r, i) => (
+                        {REALMS.map((r, i) => {
+                            const shot = src((p as any)[`world${i + 1}`])
+                            return (
                             <Reveal key={r.name} delay={i * 0.05} className="esc-glass esc-lift iv-realm">
-                                <div className="iv-art" style={{ background: r.g }} aria-hidden>
-                                    <span style={{ background: `radial-gradient(closest-side, ${r.glow}, transparent)` }} />
+                                <div className="iv-art" style={{ background: shot ? `center/cover url(${shot})` : r.g }} role="img" aria-label={shot ? `${r.name} screenshot` : `${r.name}: screenshot coming soon`}>
+                                    {!shot && <><span style={{ background: `radial-gradient(closest-side, ${r.glow}, transparent)` }} /><em className="iv-ph"><Icon name="cube" size={16} />Screenshot coming soon</em></>}
                                 </div>
                                 <div className="esc-stack" style={{ gap: 8, padding: "20px 22px 24px" }}>
                                     <div className="esc-row" style={{ justifyContent: "space-between", gap: 8 }}>
                                         <h3 className="esc-d" style={{ fontSize: 22, margin: 0 }}>{r.name}</h3>
-                                        <span className="esc-soon">Premium</span>
                                     </div>
                                     <p className="esc-p" style={{ fontSize: 15 }}>{r.body}</p>
                                 </div>
                             </Reveal>
-                        ))}
+                            )
+                        })}
                     </div>
                 </div>
             </section>
@@ -82,9 +95,9 @@ export default function InnerversePage(p: Props) {
             <section className="esc-sec">
                 <div className="esc-wrap iv-avatar">
                     <div>
-                        <SectionHead eyebrow="Your digital self · coming soon" title="An avatar that grows with you" lede="Step into the Innerverse as a reflection of you, and watch your avatar evolve as you complete daily rituals." />
+                        <SectionHead eyebrow="Your digital self" title="Create your own avatar" lede="You build your avatar yourself, and it grows as you take care of yourself in Escape." />
                         <div className="esc-stack" style={{ gap: 14 }}>
-                            {[["Lifelike", "Expressive, calm presence that feels like a mirror, not a cartoon."], ["Yours", "Sanctuary attire, luminous auras and details from the Marketplace."], ["Growing", "New looks as your energy centers open."]].map(([t, b]) => (
+                            {[["You design it", "Choose how your avatar looks, so it feels like you."], ["Yours to style", "Outfits, auras and details you redeem in the Marketplace."], ["It grows with you", "New looks open as your energy centers open."]].map(([t, b]) => (
                                 <div key={t} className="esc-row" style={{ gap: 14, alignItems: "flex-start", flexWrap: "nowrap" }}>
                                     <span className="esc-icon" style={{ width: 40, height: 40 }}><Icon name="check" size={18} /></span>
                                     <span className="esc-stack"><strong style={{ fontWeight: 500 }}>{t}</strong><span className="esc-p" style={{ fontSize: 15 }}>{b}</span></span>
@@ -103,11 +116,24 @@ export default function InnerversePage(p: Props) {
 
             <section className="esc-sec">
                 <div className="esc-wrap">
-                    <SectionHead center eyebrow="Guided discovery · coming soon" title="Interactive journeys, guided by empathy" lede="Every path inside the Innerverse adapts to how you feel." />
+                    <SectionHead center eyebrow="Games, quests & people" title="More than a place to look at" lede="Every path inside the Innerverse adapts to how you feel." />
                     <div className="esc-grid g2">
-                        <Feature icon="compass" title="Quests" body="Gentle, private quests designed to open your next level: a breath at the summit, a reflection by the sea." soon />
+                        <Feature icon="compass" title="Mini games & quests" body="Play short mini games and quests that open your next level: a breath at the summit, a puzzle by the sea." soon />
                         <Feature icon="spark" title="Lucille, the navigator" body="Your companion becomes your guide, suggesting where to go based on how you're arriving." soon delay={0.08} />
                     </div>
+                </div>
+            </section>
+
+            <section className="esc-sec">
+                <div className="esc-wrap">
+                    <SectionHead center eyebrow="Questions" title="Innerverse, answered" />
+                    <Faq items={[
+                        { q: "What is the Innerverse?", a: "A 3D world inside the Escape app. You explore calming worlds with your own avatar, play mini games, and meet other people, with Lucille as your guide." },
+                        { q: "Do I create my own avatar?", a: "Yes. You design your avatar yourself, and you can style it with outfits and auras you redeem in the Marketplace." },
+                        { q: "Are there mini games?", a: "Yes. Each world has short mini games and quests, like breathing challenges and puzzles." },
+                        { q: "Can I interact with people from around the world?", a: "Yes. You can explore worlds together and connect with people from around the world." },
+                        { q: "When does it open, and how do I get in?", a: "The Innerverse is in development. Join the waitlist and you'll be among the first let in." },
+                    ]} />
                 </div>
             </section>
 
@@ -143,7 +169,9 @@ const IV_CSS = `
 .iv-hill.a{bottom:-30%;height:60%;background:rgba(11,18,48,.35)}
 .iv-hill.b{bottom:-44%;height:66%;left:20%;background:rgba(11,18,48,.55)}
 .iv-art{position:relative;height:150px;overflow:hidden}
+.iv-art{aspect-ratio:16/10;height:auto}
 .iv-art span{position:absolute;width:60%;aspect-ratio:1;left:20%;top:10%;opacity:.55;filter:blur(8px)}
+.iv-ph{position:absolute;left:50%;top:50%;translate:-50% -50%;display:inline-flex;gap:8px;align-items:center;font-style:normal;font-size:13px;padding:6px 12px;border-radius:999px;background:rgba(11,18,48,.6);color:#E6EAF4;border:1px dashed rgba(230,234,244,.45);white-space:nowrap}
 .iv-avatar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4cqi,64px);align-items:center}
 .iv-preview{position:relative;border-radius:36px;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(80% 60% at 50% 35%,color-mix(in oklab,var(--esc-accent) 30%,transparent),transparent),linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2))}
 .iv-avatar-orb{position:absolute;left:50%;top:46%;width:46%;translate:-50% -50%}
@@ -152,9 +180,15 @@ const IV_CSS = `
 @container (max-width:900px){.iv-avatar{grid-template-columns:minmax(0,1fr)}}
 `
 
-InnerversePage.defaultProps = { waitlistHref: ROUTES.beta, santoriniImage: "", costaRicaImage: "" }
+InnerversePage.defaultProps = { waitlistHref: ROUTES.beta, santoriniImage: "", costaRicaImage: "", world1: "", world2: "", world3: "", world4: "", world5: "", world6: "" }
 addPropertyControls(InnerversePage, {
     waitlistHref: { type: ControlType.Link, title: "Waitlist link" },
     santoriniImage: { type: ControlType.Image, title: "Santorini image" },
     costaRicaImage: { type: ControlType.Image, title: "Costa Rica image" },
+    world1: { type: ControlType.Image, title: "Forest shot" },
+    world2: { type: ControlType.Image, title: "Ocean shot" },
+    world3: { type: ControlType.Image, title: "Cosmic shot" },
+    world4: { type: ControlType.Image, title: "Temple shot" },
+    world5: { type: ControlType.Image, title: "Cavern shot" },
+    world6: { type: ControlType.Image, title: "Summit shot" },
 })

@@ -3,10 +3,10 @@
 // UX reasoning (why it changed):
 //  * One question at a time. Step 1 only asks how you feel; the orbs carry feeling words only,
 //    never page names, so the choice is purely emotional (lower cognitive load, Hick's law).
-//  * Validate first (affect labelling): after you pick, Lucille reflects the feeling back in one
+//  * Validate first (affect labeling): after you pick, Lucille reflects the feeling back in one
 //    line before suggesting anything. Feeling heard lowers arousal and builds trust.
 //  * Then make the destination explicit: "What would help right now?" with three options, each
-//    labelled with exactly where it goes ("Opens · Lucille AI page") and how long it takes.
+//    labeled with exactly where it goes ("Opens · Lucille AI page") and how long it takes.
 //    One is marked Suggested (a default reduces decision effort) but all three are equal size.
 //  * Give value before asking for anything: for restless / tired / low, the first option is a
 //    30-second breath with the orb, right here. The product proves itself on the first screen.
@@ -28,7 +28,7 @@ export type Option =
 const P = {
     home: { href: ROUTES.home, page: "Home" },
     lucille: { href: ROUTES.lucille, page: "Lucille AI" },
-    community: { href: ROUTES.community, page: "Community & rewards" },
+    marketplace: { href: ROUTES.marketplace, page: "Marketplace" },
     pricing: { href: ROUTES.pricing, page: "Pricing" },
     innerverse: { href: ROUTES.innerverse, page: "Innerverse" },
     beta: { href: ROUTES.beta, page: "App Testing" },
@@ -50,7 +50,7 @@ export const JOURNEY: Record<MoodId, { reflect: string; after: string; options: 
         reflect: "Good energy. Let's put it somewhere good.",
         after: "Here's what might suit you:",
         options: [
-            { kind: "page", ...P.community, title: "Earn coins and level up", body: "How self-care earns coins and opens your seven energy centers.", time: "2 min read", icon: "coin" },
+            { kind: "page", ...P.marketplace, title: "Earn coins and level up", body: "How self-care earns coins and opens your seven energy centers.", time: "2 min read", icon: "coin" },
             { kind: "page", ...P.beta, title: "Get early access", body: "Be one of the first to try it.", time: "1 min form", icon: "flask" },
             { kind: "page", ...P.pricing, title: "See plans & pricing", body: "One pass, everything included, 7 days free.", time: "1 min read", icon: "star" },
         ],
@@ -413,5 +413,5 @@ addPropertyControls(PathGate, {
     bgVideoWebm: { type: ControlType.File, title: "Background WebM", allowedFileTypes: ["webm"] },
     bgPoster: { type: ControlType.Image, title: "Background poster" },
     bgBlur: { type: ControlType.Number, title: "Background blur", min: 0, max: 80, step: 2, unit: "px" },
-    moodOverlay: { type: ControlType.Number, title: "Mood colour strength", min: 0.4, max: 1, step: 0.02 },
+    moodOverlay: { type: ControlType.Number, title: "Mood color strength", min: 0.4, max: 1, step: 0.02 },
 })

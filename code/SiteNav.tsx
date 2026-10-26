@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Page, Orb, Icon, Button, ROUTES, escape, moodById, useEscape, ease, FlightOrb } from "./EscapeKit.tsx"
 import JourneyBanner from "./JourneyBanner.tsx"
 
-type PageKey = "home" | "lucille" | "community" | "pricing" | "innerverse" | "beta" | "demo" | "legal" | "none"
+type PageKey = "home" | "lucille" | "marketplace" | "pricing" | "innerverse" | "beta" | "demo" | "legal" | "none"
 
 interface Props {
     current: PageKey
@@ -20,7 +20,7 @@ interface Props {
     ctaHref: string
     homeHref: string
     lucilleHref: string
-    communityHref: string
+    marketplaceHref: string
     pricingHref: string
     innerverseHref: string
     betaHref: string
@@ -52,7 +52,7 @@ export default function SiteNav(p: Props) {
     const links: { key: PageKey; label: string; href: string; soon?: boolean }[] = [
         { key: "home", label: "Home", href: p.homeHref },
         { key: "lucille", label: "Lucille AI", href: p.lucilleHref },
-        { key: "community", label: "Community", href: p.communityHref },
+        { key: "marketplace", label: "Marketplace", href: p.marketplaceHref },
         { key: "pricing", label: "Pricing", href: p.pricingHref },
         { key: "innerverse", label: "Innerverse", href: p.innerverseHref, soon: true },
         { key: "beta", label: "App Testing", href: p.betaHref },
@@ -148,7 +148,7 @@ SiteNav.defaultProps = {
     ctaHref: ROUTES.beta,
     homeHref: ROUTES.home,
     lucilleHref: ROUTES.lucille,
-    communityHref: ROUTES.community,
+    marketplaceHref: ROUTES.marketplace,
     pricingHref: ROUTES.pricing,
     innerverseHref: ROUTES.innerverse,
     betaHref: ROUTES.beta,
@@ -158,14 +158,14 @@ SiteNav.defaultProps = {
 addPropertyControls(SiteNav, {
     current: {
         type: ControlType.Enum, title: "Current page",
-        options: ["home", "lucille", "community", "pricing", "innerverse", "beta", "demo", "legal", "none"],
-        optionTitles: ["Home", "Lucille AI", "Community", "Pricing", "Innerverse", "App Testing", "App Demo", "Legal", "None"],
+        options: ["home", "lucille", "marketplace", "pricing", "innerverse", "beta", "demo", "legal", "none"],
+        optionTitles: ["Home", "Lucille AI", "Marketplace", "Pricing", "Innerverse", "App Testing", "App Demo", "Legal", "None"],
     },
     ctaLabel: { type: ControlType.String, title: "Button" },
     ctaHref: { type: ControlType.Link, title: "Button link" },
     homeHref: { type: ControlType.Link, title: "Home" },
     lucilleHref: { type: ControlType.Link, title: "Lucille AI" },
-    communityHref: { type: ControlType.Link, title: "Community" },
+    marketplaceHref: { type: ControlType.Link, title: "Marketplace" },
     pricingHref: { type: ControlType.Link, title: "Pricing" },
     innerverseHref: { type: ControlType.Link, title: "Innerverse" },
     betaHref: { type: ControlType.Link, title: "App Testing" },

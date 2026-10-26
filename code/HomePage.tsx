@@ -10,7 +10,7 @@ import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
 import {
     Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Wordmark, Icon, ClosingCta,
-    MOODS, CENTERS, COIN_RULES, ROUTES, SPLASH_POSTER, MEDIA_BASE, escape, useEscape, moodById, ease, type MoodId,
+    MOODS, CENTERS, COIN_RULES, ROUTES, LINKS, SPLASH_POSTER, MEDIA_BASE, escape, useEscape, moodById, ease, type MoodId,
 } from "./EscapeKit.tsx"
 
 const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
@@ -39,13 +39,13 @@ export default function HomePage(p: Props) {
         <Page>
             <style>{HOME_CSS}</style>
             <Hero {...p} />
-            <Founder quote={p.founderQuote} name={p.founderName} role={p.founderRole} />
             <Bento />
             <TryIt />
             <HowItWorks />
             <Journey />
             <Privacy />
-            <CommunityTeaser />
+            <Welcome quote={p.founderQuote} name={p.founderName} role={p.founderRole} />
+            <RewardsTeaser />
             <ClosingCta
                 eyebrow="A self-care revolution within"
                 title={<>Ready when <span className="esc-gold">you</span> are.</>}
@@ -83,7 +83,7 @@ function Hero(p: Props) {
                     <ul className="hero-trust">
                         <li><Icon name="shield" size={18} /> Private by design</li>
                         <li><Icon name="lock" size={18} /> Your data is never sold</li>
-                        <li><Icon name="star" size={18} /> Free 7-day trial</li>
+                        <li><Icon name="star" size={18} /> Free during preview</li>
                     </ul>
                 </div>
 
@@ -108,14 +108,15 @@ function Hero(p: Props) {
     )
 }
 
-// ───────────────────────── founder note ─────────────────────────
+// ───────────────────────── welcome + founder note (further down the page) ─────────────────────────
 
-function Founder(props: { quote: string; name: string; role: string }) {
+function Welcome(props: { quote: string; name: string; role: string }) {
     return (
-        <section className="esc-sec" style={{ paddingTop: 0, paddingBottom: 0 }}>
+        <section className="esc-sec">
             <div className="esc-wrap">
                 <Reveal className="esc-glass founder">
-                    <span className="esc-over">Founder note</span>
+                    <span className="esc-over">Welcome to Escape</span>
+                    <p className="esc-lede" style={{ maxWidth: 640, margin: 0 }}>Self-care, made for you: thoughtful tools that meet you where you are, guided by an AI companion that listens first.</p>
                     <blockquote className="esc-d">“{props.quote}”</blockquote>
                     <span className="esc-p"><strong style={{ color: "var(--esc-ink)", fontWeight: 500 }}>{props.name}</strong> · {props.role}</span>
                 </Reveal>
@@ -132,27 +133,33 @@ function Bento() {
         <section className="esc-sec">
             <Backdrop intensity={0.55} />
             <div className="esc-wrap">
-                <SectionHead center eyebrow="Welcome to Escape" title="Self-care, made for you" lede="Thoughtful tools that meet you where you are, guided by an AI companion that listens first." />
+                <SectionHead center eyebrow="What's inside" title="Everything Escape does for you" lede="It starts with how you're arriving. Escape reads your mood, and everything else follows." />
                 <div className="bento">
-                    <Card className="b-lucille esc-stack" style={{ gap: 16 }}>
-                        <div className="esc-row" style={{ gap: 16 }}>
-                            <Orb mood={s.mood} size={88} live rings />
-                            <div>
-                                <span className="esc-over">Your companion</span>
-                                <h3 className="esc-d esc-h3" style={{ marginTop: 6 }}>Lucille AI</h3>
-                            </div>
+                    <Card className="b-lucille b-mood esc-stack" style={{ gap: 16 }}>
+                        <div className="moodcam" aria-hidden>
+                            <span className="moodcam-corner" /><span className="moodcam-corner" /><span className="moodcam-corner" /><span className="moodcam-corner" />
+                            <Orb mood={s.mood || "restless"} size="58%" live rings />
+                            <span className="moodcam-line" />
+                            <span className="moodcam-tag">Reading your mood…</span>
                         </div>
-                        <p className="esc-p">Talk or type. Lucille remembers what matters to you, reads the moment, and suggests something small that fits it: a breath, a sound, a stretch, a note to yourself.</p>
-                        <div className="bubbles" aria-label="Example conversation">
-                            <span className="bub me">Long day. My head won't stop.</span>
-                            <span className="bub lu">That sounds heavy. Want two minutes of slow breathing, or should we just talk it through?</span>
+                        <div>
+                            <span className="esc-over">Our biggest feature</span>
+                            <h3 className="esc-d esc-h3" style={{ marginTop: 6 }}>Mood Analyzer</h3>
                         </div>
+                        <p className="esc-p">A quick look through your camera reads how you're arriving. Lucille, your soundscape, your session and your colors all adapt to it, before you type a word.</p>
+                        <a className="esc-link" href={ROUTES.demo} style={{ marginTop: "auto" }}>See it in the demo <Icon name="arrow" size={16} /></a>
+                    </Card>
+                    <Card className="esc-stack" style={{ gap: 12 }} delay={0.05}>
+                        <div className="esc-row" style={{ gap: 12 }}>
+                            <Orb mood={s.mood} size={44} live />
+                            <h3 className="esc-d esc-h3" style={{ margin: 0 }}>Lucille AI</h3>
+                        </div>
+                        <p className="esc-p">Talk or type in over 120 languages. She picks up from your mood reading and remembers what matters to you.</p>
                         <a className="esc-link" href={ROUTES.lucille} style={{ marginTop: "auto" }}>Meet Lucille <Icon name="arrow" size={16} /></a>
                     </Card>
-                    <Feature icon="orb" title="Mood check-ins" body="Six honest moods, one tap. Your orb, your colours and your day shift with how you feel." delay={0.05} />
-                    <Feature icon="wave" title="Soundscapes" body="Living soundscapes that follow your mood and the weather outside, with a calmer night mode for sleep." delay={0.1} />
-                    <Feature icon="move" title="Mind, Reset & Body" body="Guided breathing, short resets, and yoga, pilates and tai chi sessions sized to your energy." delay={0.15} />
-                    <Feature icon="calendar" title="Plans & journal" body="A daily plan built with Lucille, a journal that reflects back gently, and letters to your future self." delay={0.2} />
+                    <Feature icon="wave" title="Soundscapes" body="Lucille suggests a living soundscape for your mood and the weather outside, with a calmer night mode for sleep." delay={0.1} />
+                    <Feature icon="move" title="Movement" body="Yoga, pilates, tai chi and short workouts, with Lucille coaching you through every rep and breath." delay={0.15} />
+                    <Feature icon="gift" title="Marketplace" body="Earn Escape Coins for every bit of self-care, then redeem them for rewards, including real gift cards." delay={0.2} />
                     <Card className="b-scan esc-stack" style={{ gap: 14 }} delay={0.25}>
                         <div className="esc-row" style={{ justifyContent: "space-between" }}>
                             <span className="esc-icon"><Icon name="spark" /></span>
@@ -164,7 +171,7 @@ function Bento() {
                             {CENTERS.map((c) => <span key={c.name} title={c.name} style={{ background: c.color, boxShadow: `0 0 14px ${c.color}` }} />)}
                         </div>
                     </Card>
-                    <Feature icon="cube" title="3D Innerverse" body="An evolving 3D sanctuary shaped by your inner state, for deep stillness and creativity." soon delay={0.3} />
+                    <Feature icon="cube" title="Innerverse" body="Explore 3D worlds with your own avatar, play mini games and meet people from around the world." soon delay={0.3} />
                 </div>
             </div>
         </section>
@@ -336,26 +343,26 @@ function Privacy() {
     )
 }
 
-// ───────────────────────── community teaser ─────────────────────────
+// ───────────────────────── rewards teaser ─────────────────────────
 
-function CommunityTeaser() {
+function RewardsTeaser() {
     return (
         <section className="esc-sec">
             <Backdrop intensity={0.55} />
             <div className="esc-wrap">
-                <SectionHead eyebrow="Grow together" title="Community & creators" lede="Co-create the future of mindful technology with people who care about the same things." />
+                <SectionHead eyebrow="Earn while you heal" title="Rewards & partners" lede="Self-care that pays you back, and a program for people who want to share it." />
                 <div className="esc-grid g2">
                     <Card className="esc-stack" style={{ gap: 14 }}>
                         <span className="esc-icon"><Icon name="gift" /></span>
                         <h3 className="esc-d esc-h3" style={{ marginTop: 8 }}>Coins & Marketplace</h3>
-                        <p className="esc-p">Earn for real self-care, then spend it on themes, avatar items and new soundscapes. Partner rewards are on the way.</p>
-                        <a className="esc-link" href={ROUTES.community}>How rewards work <Icon name="arrow" size={16} /></a>
+                        <p className="esc-p">Earn for real self-care, then spend it on themes, avatar items, new soundscapes and gift cards.</p>
+                        <a className="esc-link" href={ROUTES.marketplace}>How rewards work <Icon name="arrow" size={16} /></a>
                     </Card>
                     <Card className="esc-stack" style={{ gap: 14 }} delay={0.08}>
                         <span className="esc-icon"><Icon name="users" /></span>
-                        <h3 className="esc-d esc-h3" style={{ marginTop: 8 }}>Creators & ambassadors</h3>
-                        <p className="esc-p">Share your practice, inspire others honestly, and help shape what Escape becomes.</p>
-                        <a className="esc-link" href={`${ROUTES.community}#creators`}>Apply to the program <Icon name="arrow" size={16} /></a>
+                        <h3 className="esc-d esc-h3" style={{ marginTop: 8 }}>Influencer program</h3>
+                        <p className="esc-p">Share breathwork, yoga, movement or mindfulness content with Escape and get featured in the app.</p>
+                        <a className="esc-link" href={LINKS.influencers} target="_blank" rel="noopener">Apply to the program <Icon name="arrow" size={16} /></a>
                     </Card>
                 </div>
             </div>
@@ -382,6 +389,16 @@ const HOME_CSS = `
 .bento{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.6cqi,22px)}
 .b-lucille{grid-row:span 2}
 .b-scan{grid-column:span 2}
+.moodcam{position:relative;aspect-ratio:4/3;border-radius:22px;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,color-mix(in oklab,var(--esc-accent) 22%,transparent),transparent 70%),var(--esc-glass2);border:1px solid var(--esc-border)}
+.moodcam-corner{position:absolute;width:22px;height:22px;border:2px solid var(--esc-accent);opacity:.8}
+.moodcam-corner:nth-child(1){top:12px;left:12px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.moodcam-corner:nth-child(2){top:12px;right:12px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+.moodcam-corner:nth-child(3){bottom:12px;left:12px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+.moodcam-corner:nth-child(4){bottom:12px;right:12px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.moodcam-line{position:absolute;left:8%;right:8%;height:2px;top:20%;background:linear-gradient(90deg,transparent,var(--esc-accent),transparent);box-shadow:0 0 14px var(--esc-accent);animation:esc-scan 3.2s ease-in-out infinite}
+.moodcam-tag{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:13px;padding:5px 12px;border-radius:999px;background:var(--esc-nav);border:1px solid var(--esc-border);white-space:nowrap}
+@keyframes esc-scan{0%,100%{top:18%}50%{top:78%}}
+@media (prefers-reduced-motion:reduce){.moodcam-line{animation:none;top:50%}}
 .bubbles{display:flex;flex-direction:column;gap:8px;margin-top:4px}
 .bub{max-width:88%;padding:12px 16px;border-radius:18px;font-size:15px;line-height:1.45}
 .bub.me{align-self:flex-end;background:color-mix(in oklab,var(--esc-accent) 22%,transparent);border-bottom-right-radius:6px}
@@ -418,7 +435,7 @@ const HOME_CSS = `
 .coins td{text-align:right;border-bottom:1px solid var(--esc-line);vertical-align:middle}
 .coins tr:last-child th,.coins tr:last-child td{border-bottom:0}
 .coin{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;font-weight:600;font-size:14px;color:var(--esc-gold);background:color-mix(in oklab,var(--esc-gold) 14%,transparent)}
-@container (max-width:900px){.hero-in{grid-template-columns:minmax(0,1fr)}.hero-visual{order:-1;width:min(76%,340px)}.hero{padding-top:104px}}
+@container (max-width:900px){.hero-in{grid-template-columns:minmax(0,1fr)}.hero-visual{order:-1;width:min(62%,280px)}.hero{padding-top:104px}}
 `
 
 HomePage.defaultProps = {

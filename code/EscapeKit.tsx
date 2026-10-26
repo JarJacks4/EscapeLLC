@@ -5,7 +5,7 @@
 //   * six moods with the app's own hues and TouchDesigner Mood Orb loops (Firebase Storage)
 //   * night is the default tone; the sun/moon toggle switches to day (like the Home orb)
 //   * text passes WCAG 2.2 AA on every surface; never pure #000 / #FFF fields
-//   * motion: 520 ms, ease (0.25, 0.6, 0.25, 1), 1.8 % rise, honours prefers-reduced-motion
+//   * motion: 520 ms, ease (0.25, 0.6, 0.25, 1), 1.8 % rise, honors prefers-reduced-motion
 //
 // Every Escape component imports from this file. It is a module, not a canvas component.
 // The chosen mood + tone live in one small store (localStorage "escape.site.v1"), and are
@@ -23,7 +23,7 @@ export interface Mood {
     id: MoodId
     label: string
     line: string
-    hue: string // the orb / chip colour (v6MoodHue)
+    hue: string // the orb / chip color (v6MoodHue)
     accentDark: string // ≥ 3:1 on night fields
     accentLight: string // ≥ 4.5:1 on day fields (also used for link text there)
     base: [string, string, string] // the app's mood gradient (dark, contrast-fitted)
@@ -43,7 +43,7 @@ export const MOODS: Mood[] = [
       base: ["#4A2172", "#2B1240", "#1A0B2C"], glowA: "rgba(240,138,29,.45)", glowB: "rgba(142,124,217,.60)", loop: "escape_focus_e50_t85_v3" },
     { id: "tired", label: "Tired", line: "Running on low", hue: "#D9A066", accentDark: "#F0A55A", accentLight: "#8A5A1E",
       base: ["#101E43", "#0A1230", "#05081A"], glowA: "rgba(156,79,7,.30)", glowB: "rgba(33,44,90,.80)", loop: "escape_calm_e15_t50_v3" },
-    { id: "low", label: "Low", line: "Heavy, a little grey", hue: "#7D8BB5", accentDark: "#C9D1EE", accentLight: "#4A5884",
+    { id: "low", label: "Low", line: "Heavy, a little gray", hue: "#7D8BB5", accentDark: "#C9D1EE", accentLight: "#4A5884",
       base: ["#3A4675", "#232C55", "#141A33"], glowA: "rgba(169,179,214,.40)", glowB: "rgba(57,81,159,.50)", loop: "escape_calm_e15_t85_v3" },
 ]
 
@@ -102,10 +102,10 @@ export async function postPublic(path: string, body: unknown, timeoutMs = 15000)
 // ───────────────────────── outside links (from escapeapp.ai) ─────────────────────────
 
 export const LINKS = {
-    kickstarter: "https://www.kickstarter.com/projects/escapeai/1005851183?ref=3ews8f&token=e5c676ed",
+    // TODO: replace with the Escape campaign page once it is live
+    indiegogo: "https://www.indiegogo.com/",
     discord: "https://discord.gg/WnASA2SfA",
     influencers: "https://escape-influencer.web.app/",
-    creators: "https://escape-creators.web.app/",
     maze: "https://t.maze.co/513528542",
     betaForm: "https://forms.gle/yLFiaTAdeg37AhJC6",
     tiktok: "https://www.tiktok.com/@escapeapp",
@@ -119,7 +119,7 @@ export const ROUTES = {
     gate: "/",
     home: "/home",
     lucille: "/lucille-ai",
-    community: "/community",
+    marketplace: "/marketplace",
     pricing: "/pricing",
     innerverse: "/innerverse",
     beta: "/app-testing",
@@ -133,7 +133,7 @@ export const ROUTES = {
 export const MOOD_PATHS: Record<MoodId, { title: string; line: string; href: string }> = {
     calm: { title: "Slow down", line: "Start with the whole of Escape", href: ROUTES.home },
     focused: { title: "Talk it through", line: "Meet Lucille, your companion", href: ROUTES.lucille },
-    energized: { title: "Grow and earn", line: "Coins, levels and the community", href: ROUTES.community },
+    energized: { title: "Grow and earn", line: "Coins, levels and rewards", href: ROUTES.marketplace },
     restless: { title: "See it move", line: "Watch the app in action", href: ROUTES.demo },
     tired: { title: "Drift somewhere", line: "Preview the 3D Innerverse", href: ROUTES.innerverse },
     low: { title: "Start gently", line: "One small step, at your pace", href: ROUTES.home },
@@ -453,12 +453,12 @@ export function Backdrop(props: { intensity?: number; top?: boolean }) {
 
 /**
  * The real TouchDesigner orb, framed exactly like V6MoodOrb in the app:
- *  * clipped to a circle with a hairline border, the loop centred on the sphere (the sphere sits
+ *  * clipped to a circle with a hairline border, the loop centered on the sphere (the sphere sits
  *    ~5.5 % above the middle of the 720×1280 loops, so the crop is shifted to it)
- *  * re-coloured with the mood's hue using a `color` blend, which keeps the orb's light and
+ *  * re-colored with the mood's hue using a `color` blend, which keeps the orb's light and
  *    texture and swaps only its hue, so each of the six moods reads as its own orb
  *  * a two-layer glow in the same hue (tight halo + wide bloom)
- *  * colour, glow and loop cross-fade (600 ms) when the mood changes; breathes on a 3 s pulse
+ *  * color, glow and loop cross-fade (600 ms) when the mood changes; breathes on a 3 s pulse
  */
 export function Orb(props: { mood?: MoodId | null; size?: number | string; live?: boolean; eager?: boolean; glow?: boolean; breathe?: boolean; rings?: boolean; label?: string; style?: React.CSSProperties; tint?: string | null; warm?: boolean; hero?: boolean }) {
     const m = moodById(props.mood)
@@ -514,9 +514,9 @@ function hexA(hex: string, a: number) {
     return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`
 }
 
-/** Where the sphere sits in each loop (centre x/y as a fraction of the frame, diameter as a
+/** Where the sphere sits in each loop (center x/y as a fraction of the frame, diameter as a
  *  fraction of its width), measured from the TouchDesigner renders. Used to fit every sphere to
- *  90 % of its circle, dead centre. */
+ *  90 % of its circle, dead center. */
 const ORB_GEO: Record<string, [number, number, number]> = {
     escape_calm_e50_t15_v3: [0.5026, 0.4484, 0.6476],
     escape_focus_e85_t50_v3: [0.464, 0.465, 0.62],
@@ -644,7 +644,7 @@ function hexToLottie(hex: string) {
     return `[${n(0)},${n(2)},${n(4)}]`
 }
 
-/** ESCAPE wordmark — the exact Lottie from the app splash (5 s fade-in), recoloured. */
+/** ESCAPE wordmark — the exact Lottie from the app splash (5 s fade-in), recolored. */
 export function Wordmark(props: { color?: string; width?: number | string; play?: boolean; label?: boolean }) {
     const ref = React.useRef<HTMLDivElement>(null)
     const [failed, setFailed] = React.useState(false)
@@ -668,7 +668,7 @@ export function Wordmark(props: { color?: string; width?: number | string; play?
     }, [props.color, props.play, reduce])
     return (
         <div style={{ position: "relative", width: props.width ?? 240, aspectRatio: "842 / 230", overflow: "hidden" }} aria-label={props.label === false ? undefined : "Escape"} role={props.label === false ? undefined : "img"}>
-            {/* the Lottie canvas is 512² with the wordmark centred; crop to the mark */}
+            {/* the Lottie canvas is 512² with the wordmark centered; crop to the mark */}
             <div ref={ref} aria-hidden style={{ position: "absolute", left: "-5.7%", right: "-5.7%", top: "-152%", bottom: "-152%" }} />
             {failed && (
                 <span className="esc-d" style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", fontSize: "calc(1em * 2.4)", letterSpacing: ".04em", color: props.color }}>ESCAPE</span>

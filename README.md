@@ -27,17 +27,17 @@ Pages are hash links (`/#/home`, `/#/lucille-ai`, `/#/app-testing` …). On the 
 | `code/PathGate.tsx` | **The orb gate.** Two questions ("How are you feeling?", then "What would help?"), an optional 30-second breath, and a page that says where you're headed. The orb flies into the next page. The blurred app splash sits behind it, with a mood-colored overlay. | `/` |
 | `code/JourneyBanner.tsx` | "You chose Calm → Slow down" arrival banner with a mini site map. SiteNav already renders it. | Nothing to place. |
 | `code/SiteNav.tsx` | Floating glass nav: a live mood orb (back to the gate), sun/moon toggle, CTA, mobile menu, the arrival banner and the landing orb | top of every page |
-| `code/SiteFooter.tsx` | Footer with early access, socials, creator and influencer programs, Discord, Kickstarter and the disclaimer | bottom of every page |
-| `code/HomePage.tsx` | Hero with the **app splash animation**, live check-in, how it works, journey, privacy, community, CTA | `/home` |
+| `code/SiteFooter.tsx` | Footer with early access, socials, the influencer program, Marketplace, Discord, Indiegogo and the disclaimer | bottom of every page |
+| `code/HomePage.tsx` | Hero with the **app splash animation**, then the features first (Mood Analyzer, Lucille, Soundscapes, Movement, Marketplace, Innerverse), check-in, how it works, privacy, welcome + founder note, rewards, CTA | `/home` |
 | `code/LucillePage.tsx` | Meet Lucille, with **Talk to Lucille** in the hero | `/lucille-ai` |
 | `code/LucilleTaste.tsx` | The "Talk to Lucille" card: one message, one short reply, optional voice ("Hear Lucille say it"). Used by LucillePage. You can also drop it on any page. | (optional) |
-| `code/CommunityPage.tsx` | Coins, energy journey, Marketplace, Creator studio and Influencer cards | `/community` |
+| `code/MarketplacePage.tsx` | Escape Coins: how you earn, rewards (gift cards, themes, avatar items, soundscapes), energy levels, the influencer program | `/marketplace` |
 | `code/PricingPage.tsx` | Journey Pass monthly/yearly, FAQ | `/pricing` |
 | `code/InnerversePage.tsx` | Coming soon: worlds, realms, avatar, quests | `/innerverse` |
 | `code/BetaPage.tsx` | **Beta access.** Four-step apply flow (You → Your phone → What you'd love → Stay in touch), then a "You're #N in line" screen, Discord, Maze and FAQ | `/app-testing` |
-| `code/DemoPage.tsx` | The intern's app demo in a phone frame, with chapter jumps | `/app-demo` |
+| `code/DemoPage.tsx` | **Interactive demo with sound**, in one flow: Mood Analyzer → Lucille (voice, memory, 120+ languages) → Soundscape → Movement → Marketplace | `/app-demo` |
 | `code/LegalPage.tsx` | Privacy / Terms / Cookies (one component, choose the document) | `/privacy-policy`, `/terms`, `/cookie-policy` |
-| `media/` | Splash loop (mp4, webm, poster), demo video and poster, and three backup orb loops in `orbs/` | upload to the bucket (step 1 below) |
+| `media/` | Splash loop (mp4, webm, poster), backup orb loops in `orbs/`, and the demo's sound in `demo/` (Lucille's lines and the Misty Forest soundscape) | upload to the bucket (step 1 below) |
 | `transcode_orbs_h264.sh` | Makes H.264 copies of the orb loops (already run, so `ORB_HAS_H264 = true`) | Cloud Shell |
 | `previews/` | Screenshots of every page | reference |
 
@@ -58,7 +58,7 @@ Pages are hash links (`/#/home`, `/#/lucille-ai`, `/#/app-testing` …). On the 
 6. **Legal pages.** Use the same `LegalPage` on all three and set **Document** on each.
 7. **Publish**, then open the site on your phone and walk through the gate once.
 
-All outside links are already filled in from `LINKS` in EscapeKit: Kickstarter, the beta Discord, Maze, the beta Google Form fallback, Creator studio, the Influencer program, Instagram, TikTok and LinkedIn. To change one everywhere, edit `LINKS`. Each component's panel can also override its own links.
+All outside links are already filled in from `LINKS` in EscapeKit: Indiegogo, the beta Discord, Maze, the beta Google Form fallback, the Influencer program, Instagram, TikTok and LinkedIn. **The Indiegogo link is a placeholder (indiegogo.com) until the campaign page is live**: set `LINKS.indiegogo` in EscapeKit. To change one everywhere, edit `LINKS`. Each component's panel can also override its own links.
 
 ## Lucille on the website
 
@@ -107,10 +107,12 @@ These figures from the intern file were removed because nothing backs them yet:
 
 "On-device, no data stored" also came out, because Lucille runs in the cloud. It's now **"Private by design · Your data is never sold"**.
 
-The beta perk reads **"One year of Premium on us"** and a founding tester badge.
+Pricing shows the **Free Preview**: $0 now, with the later prices struck through. There is no free trial. The beta perk is the first year of the Journey Pass free after launch, plus a founding tester badge. "Premium" isn't used anywhere.
 
 ## Before going live, please confirm
 
 1. **Prices.** $9.99 and $47.95 need to match App Store Connect and Google Play exactly.
 2. **Legal text** is a draft. Have counsel review it, and keep "Last updated" current.
-3. **Inboxes.** privacy@, beta@ and creators@escapeapp.ai need to exist, or change the links.
+3. **Inboxes.** privacy@ and beta@escapeapp.ai need to exist, or change the links.
+4. **Indiegogo.** Replace the placeholder `LINKS.indiegogo` with the campaign URL.
+5. **Innerverse screenshots.** Drop real world renders into the six "shot" image slots on InnerversePage (or tell Claude and they can be added to the code).

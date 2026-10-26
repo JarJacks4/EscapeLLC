@@ -10,7 +10,6 @@ interface Props {
     yearlyPrice: string
     yearlyPerMonth: string
     yearlySave: string
-    trialDays: number
     ctaLabel: string
     ctaHref: string
 }
@@ -45,9 +44,9 @@ export default function PricingPage(p: Props) {
                 <Backdrop top />
                 <div className="esc-wrap">
                     <motion.div className="esc-stack esc-center esc-serene" style={{ gap: 18, alignItems: "center", maxWidth: 780, marginBottom: 48 }}>
-                        <Eyebrow>Free {p.trialDays}-day trial</Eyebrow>
-                        <h1 className="esc-d esc-h1">One pass. <span className="esc-gold">All of Escape.</span></h1>
-                        <p className="esc-lede" style={{ margin: "0 auto" }}>The Escape Journey Pass unlocks everything: Lucille, every session, Soundscapes, plans, insights and your Energy Scan. Try it free, cancel any time.</p>
+                        <Eyebrow>Free Preview</Eyebrow>
+                        <h1 className="esc-d esc-h1">All of Escape, <span className="esc-gold">free for now.</span></h1>
+                        <p className="esc-lede" style={{ margin: "0 auto" }}>During the Free Preview, the whole Escape Journey Pass costs nothing: Lucille, every session, Soundscapes, plans, insights and your Energy Scan. Paid plans start later, and we'll tell you well before they do.</p>
                         <div className="pr-toggle" role="radiogroup" aria-label="Billing period">
                             {plans.map((pl) => (
                                 <button key={pl.id} type="button" role="radio" aria-checked={plan === pl.id} className={plan === pl.id ? "on" : ""} onClick={() => setPlan(pl.id)}>
@@ -65,11 +64,12 @@ export default function PricingPage(p: Props) {
                                         <span className="esc-over">{pl.name}</span>
                                         {pl.badge ? <span className="pr-best">Best value</span> : <span className="esc-chip" style={{ minHeight: 28 }}>Most flexible</span>}
                                     </div>
-                                    <div className="pr-price"><span className="esc-d">{pl.price}</span><span className="esc-p">{pl.per}</span></div>
-                                    <p className="esc-p" style={{ marginTop: -6 }}>{pl.note}</p>
+                                    <div className="pr-price"><span className="esc-d">$0</span><span className="pr-was" aria-label={`Later ${pl.price} ${pl.per}`}><s>{pl.price}</s> {pl.per}</span></div>
+                                    <span className="pr-free">Free Preview</span>
+                                    <p className="esc-p" style={{ marginTop: -2 }}>Free right now. Later: {pl.note.charAt(0).toLowerCase() + pl.note.slice(1)}.</p>
                                     <p className="esc-d esc-gold" style={{ fontSize: 22, margin: 0 }}>“{pl.quote}”</p>
                                     <Button href={p.ctaHref} variant={on ? "primary" : "ghost"} onClick={() => setPlan(pl.id)}>{p.ctaLabel}</Button>
-                                    <span className="esc-small" style={{ textAlign: "center" }}>{p.trialDays} days free, then {pl.price}{pl.per}. Cancel anytime.</span>
+                                    <span className="esc-small" style={{ textAlign: "center" }}>No card needed during the preview.</span>
                                     <hr className="esc-hr" />
                                     <span style={{ fontWeight: 500 }}>Everything included:</span>
                                     <ul className="pr-list">{INCLUDED.map((x) => <li key={x}><Icon name="check" size={18} />{x}</li>)}</ul>
@@ -77,7 +77,7 @@ export default function PricingPage(p: Props) {
                             )
                         })}
                     </div>
-                    <p className="esc-small esc-center" style={{ textAlign: "center", marginTop: 22, maxWidth: 680 }}>Prices in USD. Subscriptions are billed through the App Store or Google Play and renew automatically until cancelled in your store account settings. Local prices may vary.</p>
+                    <p className="esc-small esc-center" style={{ textAlign: "center", marginTop: 22, maxWidth: 680 }}>Escape is free during the preview. Struck-through prices are planned USD prices for after the preview; when paid plans start, they'll be billed through the App Store or Google Play, and local prices may vary.</p>
                 </div>
             </section>
 
@@ -97,14 +97,14 @@ export default function PricingPage(p: Props) {
                 <div className="esc-wrap">
                     <SectionHead center eyebrow="Questions & answers" title="Frequently asked questions" />
                     <Faq items={[
-                        { q: `What happens after my ${p.trialDays}-day free trial?`, a: `You get full access during the trial. If you don't cancel at least 24 hours before it ends, your chosen plan starts and is charged through the App Store or Google Play.` },
-                        { q: "Can I cancel any time?", a: "Yes. Manage or cancel from your App Store or Google Play subscription settings. You keep access until the end of the period you've paid for." },
-                        { q: "Can I switch between monthly and yearly?", a: "Yes, from your store subscription settings. The change applies at your next renewal." },
+                        { q: "Is Escape really free right now?", a: "Yes. Everything in the Journey Pass is free during the Free Preview. No card needed." },
+                        { q: "What will it cost later?", a: `The plan is ${p.monthlyPrice} a month or ${p.yearlyPrice} a year after the preview. We'll announce it well ahead of time.` },
+                        { q: "Will I be charged automatically when the preview ends?", a: "No. Nothing is charged during the preview, and you'll choose a plan yourself if you want to keep going." },
                         { q: "Is my data secure?", a: <>Your data travels encrypted, is never sold, and you can delete your account from Settings at any time. Read the <a className="esc-link" href={ROUTES.privacy}>privacy policy</a>.</> },
                     ]} />
                 </div>
             </section>
-            <ClosingCta eyebrow="A self-care revolution within" title={<>Ready to transform your <span className="esc-gold">self-care</span>?</>} lede="Start free, take your time, and keep only what helps." primary={{ label: p.ctaLabel, href: p.ctaHref }} secondary={{ label: "Explore Lucille", href: ROUTES.lucille }} />
+            <ClosingCta eyebrow="A self-care revolution within" title={<>Ready to transform your <span className="esc-gold">self-care</span>?</>} lede="It's free during the preview. Take your time and keep only what helps." primary={{ label: p.ctaLabel, href: p.ctaHref }} secondary={{ label: "Explore Lucille", href: ROUTES.lucille }} />
         </Page>
     )
 }
@@ -124,6 +124,9 @@ const PR_CSS = `
 .pr-best{font-size:12px;font-weight:600;padding:5px 12px;border-radius:99px;color:var(--esc-onAccent);background:var(--esc-gold)}
 .pr-price{display:flex;align-items:baseline;gap:8px}
 .pr-price .esc-d{font-size:clamp(48px,5cqi,64px);line-height:1}
+.pr-was{color:var(--esc-muted);font-size:18px}
+.pr-was s{text-decoration-thickness:2px;text-decoration-color:var(--esc-gold)}
+.pr-free{align-self:flex-start;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:99px;color:var(--esc-gold);background:color-mix(in oklab,var(--esc-gold) 16%,transparent);border:1px solid color-mix(in oklab,var(--esc-gold) 40%,transparent)}
 .pr-list{list-style:none;margin:0;padding:0;display:grid;gap:10px;color:var(--esc-muted)}
 .pr-list li{display:flex;gap:10px;align-items:flex-start}
 .pr-list svg{color:var(--esc-accent);margin-top:2px}
@@ -135,8 +138,7 @@ PricingPage.defaultProps = {
     yearlyPrice: "$47.95",
     yearlyPerMonth: "$4.00",
     yearlySave: "Save 60%",
-    trialDays: 7,
-    ctaLabel: "Start your free trial",
+    ctaLabel: "Join the Free Preview",
     ctaHref: ROUTES.beta,
 }
 addPropertyControls(PricingPage, {
@@ -144,7 +146,6 @@ addPropertyControls(PricingPage, {
     yearlyPrice: { type: ControlType.String, title: "Yearly price" },
     yearlyPerMonth: { type: ControlType.String, title: "Yearly / month" },
     yearlySave: { type: ControlType.String, title: "Yearly badge" },
-    trialDays: { type: ControlType.Number, title: "Trial days", min: 0, max: 30, step: 1 },
     ctaLabel: { type: ControlType.String, title: "Button" },
     ctaHref: { type: ControlType.Link, title: "Button link" },
 })
