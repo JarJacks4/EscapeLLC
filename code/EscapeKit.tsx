@@ -125,6 +125,9 @@ export const ROUTES = {
     beta: "/app-testing",
     demo: "/app-demo",
     privacy: "/privacy-policy",
+    health: "/consumer-health-data",
+    safety: "/safety",
+    deleteAccount: "/delete-account",
     terms: "/terms",
     cookies: "/cookie-policy",
 }
