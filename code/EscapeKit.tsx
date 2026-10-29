@@ -102,15 +102,81 @@ export async function postPublic(path: string, body: unknown, timeoutMs = 15000)
 // ───────────────────────── outside links (from escapeapp.ai) ─────────────────────────
 
 export const LINKS = {
-    // TODO: replace with the Escape campaign page once it is live
-    indiegogo: "https://www.indiegogo.com/",
     discord: "https://discord.gg/WnASA2SfA",
     influencers: "https://escape-influencer.web.app/",
     maze: "https://t.maze.co/513528542",
     betaForm: "https://forms.gle/yLFiaTAdeg37AhJC6",
-    tiktok: "https://www.tiktok.com/@escapeapp",
-    instagram: "https://www.instagram.com/escapeappai",
+    tiktok: "https://www.tiktok.com/@escapeselfcare",
+    instagram: "https://www.instagram.com/escapeselfcare",
+    facebook: "https://www.facebook.com/profile.php?id=61596011750533",
     linkedin: "https://www.linkedin.com/company/escapeappai/",
+}
+
+// ───────────────────────── analytics (Meta Pixel, with consent) ─────────────────────────
+//
+// Noah's Meta Pixel (Business Suite) tracks visits, beta sign-ups and Discord clicks. It loads
+// only after the visitor accepts it in the consent bar (the Cookie Policy says so), because the
+// pixel is a cross-site tracker. Until then every track() call is a no-op.
+
+export const PIXEL_ID = "1685481716363748"
+const CONSENT_KEY = "escape.consent.v1"
+export type Consent = "accepted" | "declined" | null
+export function readConsent(): Consent {
+    if (!isBrowser) return null
+    try { const v = window.localStorage.getItem(CONSENT_KEY); return v === "accepted" || v === "declined" ? v : null } catch { return null }
+}
+export function writeConsent(c: Exclude<Consent, null>) {
+    try { window.localStorage.setItem(CONSENT_KEY, c) } catch {}
+    if (c === "accepted") loadPixel()
+}
+let pixelLoaded = false
+export function loadPixel(id: string = PIXEL_ID) {
+    if (!isBrowser || pixelLoaded || !id) return
+    pixelLoaded = true
+    const w = window as any
+    if (!w.fbq) {
+        const n: any = (w.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) })
+        if (!w._fbq) w._fbq = n
+        n.push = n; n.loaded = true; n.version = "2.0"; n.queue = []
+        const t = document.createElement("script"); t.async = true; t.src = "https://connect.facebook.net/en_US/fbevents.js"
+        document.head.appendChild(t)
+    }
+    w.fbq("init", id)
+    w.fbq("track", "PageView")
+}
+/** Standard events: "PageView" | "Lead" (beta application sent) | "Contact" (Discord). Anything else is a custom event. */
+export function track(event: string, params?: Record<string, unknown>) {
+    if (!isBrowser) return
+    const w = window as any
+    if (typeof w.fbq !== "function") return
+    const std = ["PageView", "Lead", "Contact", "CompleteRegistration", "ViewContent", "Subscribe"]
+    w.fbq(std.includes(event) ? "track" : "trackCustom", event, params || {})
+}
+/** Loads the pixel on mount when consent was given earlier, and counts a page view on each route change. */
+export function useAnalytics(path: string) {
+    React.useEffect(() => { if (readConsent() === "accepted") loadPixel() }, [])
+    const first = React.useRef(true)
+    React.useEffect(() => {
+        if (first.current) { first.current = false; return }
+        track("PageView")
+    }, [path])
+}
+
+/** The consent bar: shown once until the visitor picks. Decline is as easy as accept. */
+export function ConsentBar(p: { policyHref: string }) {
+    const [c, setC] = React.useState<Consent>("declined")
+    React.useEffect(() => { setC(readConsent()) }, [])
+    if (c) return null
+    const pick = (v: Exclude<Consent, null>) => { writeConsent(v); setC(v) }
+    return (
+        <div className="esc-consent" role="region" aria-label="Cookies and analytics">
+            <p className="esc-small" style={{ margin: 0 }}>We use the Meta Pixel to see which pages lead people to the beta. Only if you say yes. No ads in Escape, ever. <a className="esc-link" href={p.policyHref}>Cookie Policy</a></p>
+            <div className="esc-row" style={{ gap: 8, flexWrap: "nowrap" }}>
+                <button type="button" className="esc-btn esc-btn-g esc-btn-sm" onClick={() => pick("declined")}>No thanks</button>
+                <button type="button" className="esc-btn esc-btn-p esc-btn-sm" onClick={() => pick("accepted")}>Okay</button>
+            </div>
+        </div>
+    )
 }
 
 // ───────────────────────── routes ─────────────────────────
@@ -299,6 +365,8 @@ const CSS = `
 .esc-btn-g{color:var(--esc-ink);background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));border:1px solid var(--esc-border);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .esc-btn-g:hover{border-color:var(--esc-accent)}
 .esc-btn-sm{min-height:44px;padding:0 18px;font-size:15px}
+.esc-consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:60;margin:0 auto;max-width:720px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;border-radius:20px;border:1px solid var(--esc-border);background:color-mix(in srgb,var(--esc-bg) 92%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.esc-consent p{flex:1 1 320px}
 .esc a:focus-visible,.esc button:focus-visible,.esc [tabindex]:focus-visible{outline:3px solid var(--esc-accent);outline-offset:3px;border-radius:14px}
 .esc-chip{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:500;color:var(--esc-muted);background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));border:1px solid var(--esc-border)}
 .esc-dot{width:8px;height:8px;border-radius:50%;background:var(--esc-gold);box-shadow:0 0 12px var(--esc-gold)}
@@ -496,7 +564,11 @@ export function Orb(props: { mood?: MoodId | null; size?: number | string; live?
                 <span key={i} aria-hidden style={{ position: "absolute", inset: 0, borderRadius: "50%", border: `1px solid ${g}`, transition: "border-color .6s", animation: `esc-ring 3.6s ${i * 1.8}s var(--esc-ease) infinite` }} />
             ))}
             <div style={{ position: "absolute", inset: 0, animation: props.breathe === false || reduce ? undefined : "esc-breathe 3s var(--esc-ease) infinite" }}>
+                {/* clip-path + mask as well as border-radius: Safari and some GPUs skip the rounded
+                    overflow clip on <video> and blended layers, which showed the loop's square frame
+                    behind the sphere (Noah, Oct 28). */}
                 <div style={{ position: "absolute", inset: 0, borderRadius: "50%", overflow: "hidden", isolation: "isolate", background: "#0D1132",
+                    clipPath: "circle(50% at 50% 50%)", WebkitMaskImage: "-webkit-radial-gradient(white, black)",
                     border: "1px solid rgba(255,255,255,.28)", boxShadow: shadow, transition: "box-shadow .6s var(--esc-ease)" }}>
                     <AnimatePresence initial={false}>
                         <motion.div key={loop} style={{ position: "absolute", inset: 0 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease }}>
@@ -567,9 +639,16 @@ function OrbMedia({ loop, live, eager, warm }: { loop: string; live: boolean; ea
     }, [live, mounted])
     const grid = loop.split("_")[1] // calm | focus | picks
     const fb = fallbackBase()
+    // A standalone preview (window.__escapeOrbFallback) can't reach Firebase: use the local
+    // poster of the offline loop. A poster that fails to load is hidden, never a broken-image box.
+    const localPoster = isBrowser && (window as any).__escapeOrbFallback
+    const [posterOk, setPosterOk] = React.useState(true)
     return (
         <>
-            <img src={orbPoster(loop)} alt="" draggable={false} style={fitStyle(loop)} loading={eager ? "eager" : "lazy"} decoding="async" />
+            {posterOk && (
+                <img src={localPoster ? `${fb}escape_${grid}_e50_t50_v3_540_offline_poster.webp` : orbPoster(loop)} alt="" draggable={false}
+                    style={fitStyle(localPoster ? `offline_${grid}` : loop)} loading={eager ? "eager" : "lazy"} decoding="async" onError={() => setPosterOk(false)} />
+            )}
             {mounted && (
                 <video
                     ref={v}
@@ -821,7 +900,7 @@ export function ClosingCta(props: { eyebrow?: string; title: React.ReactNode; le
                         <p className="esc-lede" style={{ margin: "0 auto" }}>{props.lede}</p>
                         <div className="esc-row" style={{ gap: 12, justifyContent: "center", marginTop: 6 }}>
                             <Button href={props.primary.href} arrow>{props.primary.label}</Button>
-                            {props.secondary && <Button href={props.secondary.href} variant="ghost">{props.secondary.label}</Button>}
+                            {props.secondary && <Button href={props.secondary.href} variant="ghost" newTab={/^https?:/.test(props.secondary.href)} onClick={() => { if (/discord/i.test(props.secondary!.href)) track("Contact", { content_name: "discord", placement: "closing_cta" }) }}>{props.secondary.label}</Button>}
                         </div>
                         {props.badges && <div style={{ marginTop: 10 }}><StoreBadges appStoreUrl={props.appStoreUrl} playUrl={props.playUrl} /></div>}
                     </div>

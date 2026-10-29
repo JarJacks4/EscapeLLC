@@ -2,20 +2,19 @@
 //
 // The flow (mirrors escapeapp.ai/beta-test, made into one guided journey):
 //   hero → why join → APPLY (4 short steps, on the page) → "You're on the list" with your place →
-//   what happens next → Discord + Maze → FAQ → support on Indiegogo.
+//   what happens next → Discord + Maze → FAQ → join the Discord.
 // Applications go to POST /v1/public/beta-apply on the Lucille API (stored for the team, one per
 // email). If the API can't be reached, the visitor is offered the Google Form instead.
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion"
-import { Page, Backdrop, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, Faq, Reveal, ROUTES, LINKS, useEscape, moodById, easeSoft, postPublic, type IconName } from "./EscapeKit.tsx"
+import { Page, Backdrop, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, Faq, Reveal, ROUTES, LINKS, useEscape, moodById, easeSoft, postPublic, type IconName, track } from "./EscapeKit.tsx"
 
 interface Props {
     testLength: string
     reviewTime: string
     discordUrl: string
     mazeUrl: string
-    indiegogoUrl: string
     fallbackFormUrl: string
     privacyHref: string
 }
@@ -41,7 +40,7 @@ export default function BetaPage(p: Props) {
                         <p className="esc-lede">Help shape a calmer kind of self-care app. Get Lucille early, tell us what works, and get a founding tester badge plus your first year of the Journey Pass free after launch.</p>
                         <div className="esc-row" style={{ gap: 12 }}>
                             <Button onClick={toApply} arrow>Apply in 2 minutes</Button>
-                            <Button href={p.indiegogoUrl} variant="ghost" newTab>Support on Indiegogo</Button>
+                            <Button href={p.discordUrl} variant="ghost" newTab onClick={() => track("Contact", { content_name: "discord", placement: "beta_hero" })}>Join the Discord</Button>
                         </div>
                         <ul className="be-trust">
                             <li><Icon name="check" size={18} />Free to join</li>
@@ -111,7 +110,7 @@ export default function BetaPage(p: Props) {
                         <span className="esc-icon"><Icon name="users" /></span>
                         <h3 className="esc-d esc-h3" style={{ marginTop: 6 }}>Connect on Discord</h3>
                         <p className="esc-p">Real-time feedback channels, weekly team AMAs, beta announcements and community challenges. Accepted testers get an invite automatically.</p>
-                        <div style={{ marginTop: "auto" }}><Button href={p.discordUrl} variant="ghost" small newTab arrow>Join the Discord</Button></div>
+                        <div style={{ marginTop: "auto" }}><Button href={p.discordUrl} variant="ghost" small newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_connect" })}>Join the Discord</Button></div>
                     </Card>
                     <Card className="esc-stack" style={{ gap: 14 }} delay={0.06}>
                         <span className="esc-icon"><Icon name="flask" /></span>
@@ -141,10 +140,13 @@ export default function BetaPage(p: Props) {
                     <Reveal className="esc-glass esc-glow be-ks">
                         <div className="esc-stack" style={{ gap: 8 }}>
                             <span className="esc-over">Can't wait for a spot?</span>
-                            <h2 className="esc-d" style={{ fontSize: "clamp(26px,3cqi,36px)", margin: 0 }}>Back Escape on Indiegogo</h2>
-                            <p className="esc-p">Supporters get exclusive early access and help bring Lucille to everyone.</p>
+                            <h2 className="esc-d" style={{ fontSize: "clamp(26px,3cqi,36px)", margin: 0 }}>Come say hi on Discord</h2>
+                            <p className="esc-p">Meet the team and other testers, see what's shipping, and try a Maze study while you wait.</p>
                         </div>
-                        <Button href={p.indiegogoUrl} newTab arrow>Support the campaign</Button>
+                        <div className="esc-row" style={{ gap: 10 }}>
+                            <Button href={p.discordUrl} newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_card" })}>Join the Discord</Button>
+                            <Button href={p.mazeUrl} variant="ghost" newTab>Try a Maze study</Button>
+                        </div>
                     </Reveal>
                 </div>
             </section>
@@ -158,7 +160,7 @@ const GOALS: { id: string; label: string }[] = [
     { id: "focus", label: "Find focus" }, { id: "slow_down", label: "Slow down" }, { id: "sleep", label: "Sleep better" },
     { id: "lighter", label: "Feel lighter" }, { id: "move", label: "Move my body" }, { id: "kind", label: "Be kind to myself" }, { id: "explore", label: "Just explore" },
 ]
-const SOURCES = ["TikTok", "Instagram", "A friend", "Indiegogo", "Discord", "LinkedIn", "Other"]
+const SOURCES = ["TikTok", "Instagram", "A friend", "Discord", "LinkedIn", "Other"]
 const STEPS = ["You", "Your phone", "What you'd love", "Stay in touch"]
 
 interface Form { name: string; email: string; age: boolean; device: "" | "iphone" | "android" | "both"; deviceModel: string; goals: string[]; source: string; discord: boolean; maze: boolean; consent: boolean }
@@ -205,7 +207,7 @@ function ApplyFlow(p: Props) {
             ageConfirmed: f.age, consent: f.consent,
         })
         setBusy(false)
-        if (res.ok && res.data?.ok) { setDone({ position: res.data.position, duplicate: res.data.duplicate }); try { sessionStorage.removeItem(DRAFT) } catch {} }
+        if (res.ok && res.data?.ok) { setDone({ position: res.data.position, duplicate: res.data.duplicate }); track("Lead", { content_name: "beta_application", device: f.device }); try { sessionStorage.removeItem(DRAFT) } catch {} }
         else if (res.status === 422 && res.data?.detail) setErrors({ form: typeof res.data.detail === "string" ? res.data.detail : "Please check your answers." })
         else setFailed(true)
     }
@@ -228,8 +230,8 @@ function ApplyFlow(p: Props) {
                     <li><span>4</span>Test · ~{p.testLength}</li>
                 </ol>
                 <div className="esc-row" style={{ gap: 10, justifyContent: "center" }}>
-                    <Button href={p.discordUrl} newTab arrow>Join the Discord now</Button>
-                    <Button href={p.indiegogoUrl} variant="ghost" newTab>Support on Indiegogo</Button>
+                    <Button href={p.discordUrl} newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_done" })}>Join the Discord now</Button>
+                    <Button href={p.mazeUrl} variant="ghost" newTab>Try a Maze study</Button>
                 </div>
             </motion.div>
         )
@@ -435,7 +437,6 @@ BetaPage.defaultProps = {
     reviewTime: "48 hours",
     discordUrl: LINKS.discord,
     mazeUrl: LINKS.maze,
-    indiegogoUrl: LINKS.indiegogo,
     fallbackFormUrl: LINKS.betaForm,
     privacyHref: ROUTES.privacy,
 }
@@ -444,7 +445,6 @@ addPropertyControls(BetaPage, {
     reviewTime: { type: ControlType.String, title: "Review time" },
     discordUrl: { type: ControlType.Link, title: "Discord" },
     mazeUrl: { type: ControlType.Link, title: "Maze" },
-    indiegogoUrl: { type: ControlType.Link, title: "Indiegogo" },
     fallbackFormUrl: { type: ControlType.Link, title: "Backup form" },
     privacyHref: { type: ControlType.Link, title: "Privacy link" },
 })

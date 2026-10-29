@@ -23,7 +23,7 @@ interface Props {
     voiceReward: string
     soundscape: string
     waitlistHref: string
-    crowdfundHref: string
+    discordHref: string
 }
 
 const SOUND_KEYS = { mood: "voiceMood", listen: "voiceListen", memory: "voiceMemory", forest: "voiceSoundscape", move: "voiceMove", reward: "voiceReward", music: "soundscape" } as const
@@ -256,7 +256,7 @@ export default function DemoPage(p: Props) {
                 </div>
             </section>
 
-            <ClosingCta eyebrow="Coming to iOS & Android" title={<>Be first to experience <span className="esc-gold">Escape</span></>} lede={p.crowdfundHref ? "Join the beta, or back Escape on Indiegogo and get early access as a supporter." : "Join the beta and we'll let you know the moment it opens."} primary={{ label: "Join the beta", href: p.waitlistHref }} secondary={p.crowdfundHref ? { label: "Support on Indiegogo", href: p.crowdfundHref } : undefined} badges />
+            <ClosingCta eyebrow="Coming to iOS & Android" title={<>Be first to experience <span className="esc-gold">Escape</span></>} lede="Join the beta, and come hang out with the team and other testers on Discord." primary={{ label: "Join the beta", href: p.waitlistHref }} secondary={p.discordHref ? { label: "Join the Discord", href: p.discordHref } : undefined} badges />
         </Page>
     )
 }
@@ -589,7 +589,7 @@ DemoPage.defaultProps = {
     voiceReward: DEMO + "lucille_reward.mp3",
     soundscape: DEMO + "soundscape_misty_forest.mp3",
     waitlistHref: ROUTES.beta,
-    crowdfundHref: LINKS.indiegogo,
+    discordHref: LINKS.discord,
 }
 addPropertyControls(DemoPage, {
     voiceMood: { type: ControlType.File, title: "1 · Mood voice", allowedFileTypes: ["mp3", "m4a"] },
@@ -600,5 +600,5 @@ addPropertyControls(DemoPage, {
     voiceMove: { type: ControlType.File, title: "4 · Coaching voice", allowedFileTypes: ["mp3", "m4a"] },
     voiceReward: { type: ControlType.File, title: "5 · Reward voice", allowedFileTypes: ["mp3", "m4a"] },
     waitlistHref: { type: ControlType.Link, title: "Beta link" },
-    crowdfundHref: { type: ControlType.Link, title: "Indiegogo link" },
+    discordHref: { type: ControlType.Link, title: "Discord link" },
 })

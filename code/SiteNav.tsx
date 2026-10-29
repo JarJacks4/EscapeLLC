@@ -9,7 +9,7 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, AnimatePresence } from "framer-motion"
-import { Page, Orb, Icon, Button, ROUTES, escape, moodById, useEscape, ease, FlightOrb } from "./EscapeKit.tsx"
+import { Page, Orb, Icon, Button, ROUTES, escape, moodById, useEscape, ease, FlightOrb, ConsentBar, useAnalytics } from "./EscapeKit.tsx"
 import JourneyBanner from "./JourneyBanner.tsx"
 
 type PageKey = "home" | "lucille" | "marketplace" | "pricing" | "innerverse" | "beta" | "demo" | "legal" | "none"
@@ -33,6 +33,13 @@ interface Props {
  * @framerIntrinsicWidth 1440
  */
 export default function SiteNav(p: Props) {
+    const [path, setPath] = React.useState("")
+    React.useEffect(() => {
+        const f = () => setPath(window.location.pathname + window.location.hash)
+        f(); window.addEventListener("hashchange", f); window.addEventListener("popstate", f)
+        return () => { window.removeEventListener("hashchange", f); window.removeEventListener("popstate", f) }
+    }, [])
+    useAnalytics(path)
     const s = useEscape()
     const [open, setOpen] = React.useState(false)
     const [scrolled, setScrolled] = React.useState(false)
@@ -63,6 +70,7 @@ export default function SiteNav(p: Props) {
         <Page bare style={{ background: "transparent" }}>
             <style>{NAV_CSS}</style>
             <FlightOrb />
+            <ConsentBar policyHref={ROUTES.cookies} />
             <nav className={`nav ${scrolled ? "scrolled" : ""}`} aria-label="Main">
                 <a className="nav-mark esc-d" href={p.homeHref} aria-label="Escape home">ESCAPE<sup>™</sup></a>
                 <ul className="nav-links">

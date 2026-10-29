@@ -15,6 +15,7 @@ interface Props {
     instagramUrl: string
     tiktokUrl: string
     linkedinUrl: string
+    facebookUrl: string
 }
 
 /**
@@ -24,7 +25,7 @@ interface Props {
  */
 export default function SiteFooter(p: Props) {
     const cols = [
-        { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Indiegogo", LINKS.indiegogo]] },
+        { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Discord", LINKS.discord]] },
         { title: "Rewards", links: [["Marketplace", ROUTES.marketplace], ["Influencer program", LINKS.influencers], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
         { title: "Company", links: [["Privacy Policy", ROUTES.privacy], ["Consumer Health Data", ROUTES.health], ["Terms of Service", ROUTES.terms], ["Safety", ROUTES.safety], ["Cookie Policy", ROUTES.cookies], ["Contact", `mailto:${p.contactEmail}`]] },
     ]
@@ -41,6 +42,7 @@ export default function SiteFooter(p: Props) {
                         <div className="esc-row" style={{ gap: 18 }}>
                             {p.instagramUrl && <a className="esc-link" href={p.instagramUrl} target="_blank" rel="noopener noreferrer">Instagram</a>}
                             {p.tiktokUrl && <a className="esc-link" href={p.tiktokUrl} target="_blank" rel="noopener noreferrer">TikTok</a>}
+                            {p.facebookUrl && <a className="esc-link" href={p.facebookUrl} target="_blank" rel="noopener noreferrer">Facebook</a>}
                             {p.linkedinUrl && <a className="esc-link" href={p.linkedinUrl} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
                         </div>
                     </div>
@@ -95,6 +97,7 @@ SiteFooter.defaultProps = {
     playUrl: "",
     contactEmail: "privacy@escapeapp.ai",
     instagramUrl: LINKS.instagram,
+    facebookUrl: LINKS.facebook,
     tiktokUrl: LINKS.tiktok,
     linkedinUrl: LINKS.linkedin,
 }
@@ -111,4 +114,5 @@ addPropertyControls(SiteFooter, {
     instagramUrl: { type: ControlType.Link, title: "Instagram" },
     tiktokUrl: { type: ControlType.Link, title: "TikTok" },
     linkedinUrl: { type: ControlType.Link, title: "LinkedIn" },
+    facebookUrl: { type: ControlType.Link, title: "Facebook" },
 })

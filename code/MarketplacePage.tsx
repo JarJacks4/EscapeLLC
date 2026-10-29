@@ -33,7 +33,7 @@ export default function MarketplacePage(p: Props) {
                     ]} />
                 </div>
             </section>
-            <ClosingCta eyebrow="Escape Marketplace" title={<>Start earning for <span className="esc-gold">taking care of you</span></>} lede="Join early, earn from day one, and redeem what you've earned." primary={{ label: "Get early access", href: p.primaryHref }} secondary={{ label: "Support on Indiegogo", href: LINKS.indiegogo }} />
+            <ClosingCta eyebrow="Escape Marketplace" title={<>Start earning for <span className="esc-gold">taking care of you</span></>} lede="Join early, earn from day one, and redeem what you've earned." primary={{ label: "Get early access", href: p.primaryHref }} secondary={{ label: "Join the Discord", href: LINKS.discord }} />
         </Page>
     )
 }

@@ -11,12 +11,12 @@ const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
 interface Props { waitlistHref: string; santoriniImage: any; costaRicaImage: any; world1: any; world2: any; world3: any; world4: any; world5: any; world6: any }
 
 const REALMS = [
-    { name: "Enchanted Forest", body: "Sun-dappled ancient redwoods and whispering foliage for grounding.", g: "linear-gradient(160deg,#1E5B3A,#0C2A1E 60%,#08160F)", glow: "#7ED6A1" },
-    { name: "Ocean Depths", body: "Weightless bioluminescent currents that slow your breathing.", g: "linear-gradient(170deg,#0D4B78,#06213F 60%,#030E1F)", glow: "#4CF6F6" },
+    { name: "Enchanted Forest", body: "Sun-dappled ancient redwoods and whispering foliage for grounding.", g: "linear-gradient(180deg,#9BD5A8 0%,#2F7A52 38%,#0C2A1E 100%)", glow: "#7ED6A1" },
+    { name: "Ocean Depths", body: "Weightless bioluminescent currents that slow your breathing.", g: "linear-gradient(180deg,#5FB7E8 0%,#0D4B78 45%,#06213F 100%)", glow: "#4CF6F6" },
     { name: "Cosmic Realm", body: "Float among starlight and soft nebulae for expansive calm.", g: "radial-gradient(120% 90% at 70% 20%,#5B3AA8,#1A1648 50%,#05081A)", glow: "#B9A3F0" },
-    { name: "Sacred Temple", body: "Mist-wrapped mountain courtyards and resonant singing bowls.", g: "linear-gradient(170deg,#8A5A2B,#3B2414 60%,#1A0F08)", glow: "#F5C26B" },
+    { name: "Sacred Temple", body: "Mist-wrapped mountain courtyards and resonant singing bowls.", g: "linear-gradient(180deg,#F6D7A6 0%,#C98A4A 42%,#4A2A12 100%)", glow: "#F5C26B" },
     { name: "Crystal Cavern", body: "Acoustic mineral chambers that echo harmonic frequencies.", g: "linear-gradient(160deg,#3D3190,#1F37A8 45%,#0B1230)", glow: "#9CC2FF" },
-    { name: "Mountain Summit", body: "Crisp alpine dawn above a sea of clouds to awaken focus.", g: "linear-gradient(180deg,#F0A55A,#C85A7A 35%,#2A2366 75%,#0B1230)", glow: "#FFE2BF" },
+    { name: "Mountain Summit", body: "Crisp alpine dawn above a sea of clouds to awaken focus.", g: "linear-gradient(180deg,#FFD8A8 0%,#F0A55A 30%,#C85A7A 60%,#2A2366 100%)", glow: "#FFE2BF" },
 ]
 
 /**
@@ -76,8 +76,8 @@ export default function InnerversePage(p: Props) {
                             const shot = src((p as any)[`world${i + 1}`])
                             return (
                             <Reveal key={r.name} delay={i * 0.05} className="esc-glass esc-lift iv-realm">
-                                <div className="iv-art" style={{ background: shot ? `center/cover url(${shot})` : r.g }} role="img" aria-label={shot ? `${r.name} screenshot` : `${r.name}: screenshot coming soon`}>
-                                    {!shot && <><span style={{ background: `radial-gradient(closest-side, ${r.glow}, transparent)` }} /><em className="iv-ph"><Icon name="cube" size={16} />Screenshot coming soon</em></>}
+                                <div className="iv-art" style={{ background: shot ? `center/cover url(${shot})` : r.g }} role="img" aria-label={shot ? `${r.name} screenshot` : `${r.name}, illustrated`}>
+                                    {!shot && <><WorldScene index={i} glow={r.glow} /><em className="iv-ph iv-ph-soft">Concept art · in development</em></>}
                                 </div>
                                 <div className="esc-stack" style={{ gap: 8, padding: "20px 22px 24px" }}>
                                     <div className="esc-row" style={{ justifyContent: "space-between", gap: 8 }}>
@@ -142,6 +142,104 @@ export default function InnerversePage(p: Props) {
     )
 }
 
+/**
+ * One drawn scene per world, so the cards read as places before the real renders arrive:
+ * forest (redwoods and light shafts), ocean (swells and bioluminescent motes), cosmic (nebula,
+ * ringed planet and stars), temple (mist bands and a courtyard roofline), cavern (crystal
+ * shards), summit (peaks above a cloud sea). Pure SVG, no images. Motion is a slow drift only,
+ * and none at all with Reduce Motion.
+ */
+function WorldScene({ index, glow }: { index: number; glow: string }) {
+    const reduce = useReducedMotion()
+    const drift = reduce ? undefined : "iv-drift 14s ease-in-out infinite alternate"
+    const common = { width: "100%", height: "100%", position: "absolute" as const, inset: 0 }
+    const id = `ivw${index}`
+    const scenes: React.ReactNode[] = [
+        // 0 forest
+        <svg key="f" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+            <defs><linearGradient id={`${id}a`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#B9F0CB" stopOpacity=".55" /><stop offset="1" stopColor="#B9F0CB" stopOpacity="0" /></linearGradient></defs>
+            <g style={{ animation: drift, transformOrigin: "50% 0" }}>
+                <polygon points="120,0 160,0 230,200 150,200" fill={`url(#${id}a)`} />
+                <polygon points="190,0 215,0 300,200 250,200" fill={`url(#${id}a)`} opacity=".6" />
+            </g>
+            {[[18, 150, 46], [64, 170, 60], [120, 160, 52], [182, 176, 64], [238, 158, 50], [292, 172, 58]].map(([x, y, h], k) => (
+                <g key={k} fill="#061A10">
+                    <rect x={x - 4} y={y - h * 0.35} width="8" height={h * 0.35 + 40} />
+                    <polygon points={`${x - 26},${y} ${x},${y - h} ${x + 26},${y}`} />
+                    <polygon points={`${x - 20},${y - h * 0.3} ${x},${y - h * 1.15} ${x + 20},${y - h * 0.3}`} />
+                </g>
+            ))}
+            <rect x="0" y="176" width="320" height="24" fill="#04120B" />
+            {[[70, 120], [150, 90], [210, 130], [260, 70], [40, 60]].map(([x, y], k) => <circle key={k} cx={x} cy={y} r="1.6" fill={glow} opacity=".8" />)}
+        </svg>,
+        // 1 ocean
+        <svg key="o" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+            <g style={{ animation: drift }}>
+                <path d="M-20,70 C40,50 80,90 140,70 S240,50 340,72 L340,210 L-20,210 Z" fill="#0A3F66" opacity=".9" />
+                <path d="M-20,105 C50,85 90,125 160,105 S260,88 340,108 L340,210 L-20,210 Z" fill="#072C4A" />
+                <path d="M-20,145 C60,125 110,165 180,145 S280,128 340,150 L340,210 L-20,210 Z" fill="#041A2E" />
+            </g>
+            {[[40, 160, 2.2], [92, 182, 1.4], [150, 170, 2.6], [205, 188, 1.6], [258, 166, 2], [300, 184, 1.2], [120, 130, 1.3], [230, 120, 1.1]].map(([x, y, r], k) => (
+                <circle key={k} cx={x} cy={y} r={r} fill={glow} opacity=".85" />
+            ))}
+            <ellipse cx="160" cy="40" rx="120" ry="36" fill="#FFFFFF" opacity=".06" />
+        </svg>,
+        // 2 cosmic
+        <svg key="c" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+            <defs><radialGradient id={`${id}n`} cx=".3" cy=".4" r=".7"><stop offset="0" stopColor="#B9A3F0" stopOpacity=".55" /><stop offset="1" stopColor="#B9A3F0" stopOpacity="0" /></radialGradient></defs>
+            <ellipse cx="110" cy="80" rx="150" ry="90" fill={`url(#${id}n)`} style={{ animation: drift }} />
+            <g transform="translate(226 112) rotate(-18)">
+                <circle r="30" fill="#2A1F5E" />
+                <circle r="30" fill="#8E7CD9" opacity=".35" />
+                <ellipse rx="54" ry="10" fill="none" stroke="#E6EAF4" strokeOpacity=".55" strokeWidth="2" />
+            </g>
+            {[[20, 30], [60, 120], [95, 20], [140, 150], [170, 60], [200, 30], [260, 40], [300, 90], [280, 170], [40, 180], [120, 100], [240, 180]].map(([x, y], k) => (
+                <circle key={k} cx={x} cy={y} r={k % 3 === 0 ? 1.8 : 1} fill="#FFFFFF" opacity={k % 2 ? ".9" : ".6"} />
+            ))}
+        </svg>,
+        // 3 temple
+        <svg key="t" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+            <circle cx="250" cy="52" r="26" fill="#F5C26B" opacity=".75" />
+            <g fill="#2A1507">
+                <path d="M0,200 L0,150 C40,140 60,120 100,124 C140,128 150,100 200,106 C250,112 280,96 320,104 L320,200 Z" />
+                <rect x="118" y="96" width="84" height="60" />
+                <path d="M100,98 C130,78 190,78 220,98 L205,96 C185,84 135,84 115,96 Z" />
+                <path d="M108,112 L212,112 L202,100 L118,100 Z" />
+                <rect x="140" y="120" width="8" height="36" fill="#3B2414" /><rect x="172" y="120" width="8" height="36" fill="#3B2414" />
+            </g>
+            <g style={{ animation: drift }}>
+                {[[0, 140, 180], [120, 162, 220], [60, 184, 300]].map(([x, y, w], k) => <rect key={k} x={x} y={y} width={w} height="10" rx="5" fill="#E6EAF4" opacity={0.16 - k * 0.03} />)}
+            </g>
+        </svg>,
+        // 4 cavern
+        <svg key="k" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+            <defs><linearGradient id={`${id}c`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9CC2FF" /><stop offset="1" stopColor="#3D3190" /></linearGradient></defs>
+            <rect x="0" y="0" width="320" height="200" fill="#0B1230" opacity=".35" />
+            {[[30, 200, 70, 26], [80, 200, 130, 36], [140, 200, 90, 22], [200, 200, 150, 40], [262, 200, 100, 28]].map(([x, y, h, w], k) => (
+                <polygon key={k} points={`${x - w / 2},${y} ${x},${y - h} ${x + w / 2},${y}`} fill={`url(#${id}c)`} opacity={0.85 - k * 0.08} />
+            ))}
+            {[[60, 0, 60, 24], [170, 0, 90, 30], [250, 0, 50, 20]].map(([x, y, h, w], k) => (
+                <polygon key={k} points={`${x - w / 2},${y} ${x},${y + h} ${x + w / 2},${y}`} fill={`url(#${id}c)`} opacity=".55" />
+            ))}
+            <g style={{ animation: drift }}>{[[110, 120], [200, 90], [60, 70], [270, 130]].map(([x, y], k) => <circle key={k} cx={x} cy={y} r="2" fill={glow} opacity=".9" />)}</g>
+        </svg>,
+        // 5 summit
+        <svg key="s" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+            <circle cx="92" cy="74" r="34" fill="#FFE2BF" opacity=".9" />
+            <g fill="#2A2366">
+                <polygon points="0,200 70,90 120,150 160,80 215,140 250,96 320,200" />
+                <polygon points="40,200 120,110 180,200" opacity=".8" />
+            </g>
+            <polygon points="150,96 160,80 170,96" fill="#E6EAF4" opacity=".9" />
+            <g style={{ animation: drift }}>
+                {[[0, 160, 150, 26], [120, 150, 220, 30], [220, 168, 140, 22]].map(([x, y, w, h], k) => <ellipse key={k} cx={x + w / 2} cy={y} rx={w / 2} ry={h / 2} fill="#F3EEF9" opacity={0.9 - k * 0.15} />)}
+                <rect x="0" y="166" width="320" height="40" fill="#F3EEF9" opacity=".8" />
+            </g>
+        </svg>,
+    ]
+    return <>{scenes[index % scenes.length]}</>
+}
+
 function Postcard(p: { title: string; place: string; body: string; img: string; g: string; delay?: number }) {
     return (
         <Reveal delay={p.delay} className="esc-glass esc-lift iv-card">
@@ -171,7 +269,9 @@ const IV_CSS = `
 .iv-art{position:relative;height:150px;overflow:hidden}
 .iv-art{aspect-ratio:16/10;height:auto}
 .iv-art span{position:absolute;width:60%;aspect-ratio:1;left:20%;top:10%;opacity:.55;filter:blur(8px)}
+@keyframes iv-drift{from{transform:translate3d(-6px,0,0)}to{transform:translate3d(6px,2px,0)}}
 .iv-ph{position:absolute;left:50%;top:50%;translate:-50% -50%;display:inline-flex;gap:8px;align-items:center;font-style:normal;font-size:13px;padding:6px 12px;border-radius:999px;background:rgba(11,18,48,.6);color:#E6EAF4;border:1px dashed rgba(230,234,244,.45);white-space:nowrap}
+.iv-ph-soft{left:14px;top:auto;bottom:12px;translate:0 0;border-style:solid;border-color:rgba(230,234,244,.22);background:rgba(11,18,48,.55);font-size:12px}
 .iv-avatar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4cqi,64px);align-items:center}
 .iv-preview{position:relative;border-radius:36px;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(80% 60% at 50% 35%,color-mix(in oklab,var(--esc-accent) 30%,transparent),transparent),linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2))}
 .iv-avatar-orb{position:absolute;left:50%;top:46%;width:46%;translate:-50% -50%}
