@@ -10,8 +10,7 @@ import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
 import {
     Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Wordmark, Icon, ClosingCta,
-    MOODS, CENTERS, COIN_RULES, ROUTES, LINKS, SPLASH_POSTER, MEDIA_BASE, escape, useEscape, moodById, ease, type MoodId,
-} from "./EscapeKit.tsx"
+    MOODS, CENTERS, COIN_RULES, ROUTES, LINKS, SPLASH_POSTER, MEDIA_BASE, escape, useEscape, moodById, ease, type MoodId, track } from "./EscapeKit.tsx"
 
 const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
 
@@ -79,6 +78,7 @@ function Hero(p: Props) {
                     <div className="esc-row" style={{ gap: 12, marginTop: 8 }}>
                         <Button href={p.primaryHref} arrow>{p.primaryLabel}</Button>
                         <Button href={p.demoHref} variant="ghost" icon={<span className="hero-play"><Icon name="play" size={12} /></span>}>Watch the app demo</Button>
+                        <Button href={LINKS.indiegogo} variant="ghost" newTab onClick={() => track("IndiegogoClick", { placement: "home_hero" })}>Back us on Indiegogo</Button>
                     </div>
                     <ul className="hero-trust">
                         <li><Icon name="shield" size={18} /> Private by design</li>

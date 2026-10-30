@@ -37,7 +37,7 @@ Pages are hash links (`/#/home`, `/#/lucille-ai`, `/#/app-testing` …). On the 
 | `code/BetaPage.tsx` | **Beta access.** Four-step apply flow (You → Your phone → What you'd love → Stay in touch), then a "You're #N in line" screen, Discord, Maze and FAQ | `/app-testing` |
 | `code/DemoPage.tsx` | **Interactive demo with sound**, in one flow: Mood Analyzer → Lucille (voice, memory, 120+ languages) → Soundscape → Movement → Marketplace | `/app-demo` |
 | `code/LegalPage.tsx` | Privacy / Terms / Cookies (one component, choose the document) | `/privacy-policy`, `/terms`, `/cookie-policy` |
-| `media/` | Splash loop (mp4, webm, poster), backup orb loops in `orbs/`, and the demo's sound in `demo/` (Lucille's lines and the Misty Forest soundscape) | upload to the bucket (step 1 below) |
+| `media/` | Splash loop (mp4, webm, poster), backup orb loops in `orbs/`, the demo's sound in `demo/` (Lucille's lines and the Misty Forest soundscape) and the Innerverse world captures in `innerverse/` | upload to the bucket (step 1 below) |
 | `transcode_orbs_h264.sh` | Makes H.264 copies of the orb loops (already run, so `ORB_HAS_H264 = true`) | Cloud Shell |
 | `previews/` | Screenshots of every page | reference |
 
@@ -57,6 +57,16 @@ Pages are hash links (`/#/home`, `/#/lucille-ai`, `/#/app-testing` …). On the 
    - `SiteFooter` at the bottom, with Width Fill.
 6. **Legal pages.** Use the same `LegalPage` on all three and set **Document** on each.
 7. **Publish**, then open the site on your phone and walk through the gate once.
+
+## Round 2 (Oct 29): Ben's and Noah's notes, where each one lives
+
+- **Meta Pixel (Noah).** Do **not** paste the `<head>` snippet into Framer's Site Settings. The same pixel (`1685481716363748`) is loaded by `EscapeKit` after the visitor accepts the consent bar, which is what the Cookie Policy promises; pasting it in the head as well would double-count PageViews and fire before consent. Events already wired: `PageView` (on consent), `Lead` when the beta form is submitted, `Contact` on every Discord button, `IndiegogoClick` (custom) on every Indiegogo button (home hero, beta hero, beta card, footer). They show up in Events Manager under those names.
+- **Indiegogo (Ben).** Every campaign button points at `LINKS.indiegogo` in `EscapeKit.tsx`, which is a placeholder until the campaign page is live. Change that one line (or the Indiegogo link in the Beta page panel).
+- **Demo sound (Ben).** The demo plays sound only once `media/demo/` is in the bucket (step 1). One clip is still to be rendered in Denise's voice: `lucille_language.mp3`, the line *"Y si prefieres, podemos hablar en español."* (chapter 2, the 120-languages moment). Until it exists the moment shows as captions only.
+- **Innerverse screenshots (Ben, Noah).** Three real captures from the Unreal build are the defaults for Enchanted Forest, Sacred Temple and Crystal Cavern (`media/innerverse/`). The other three cards keep the illustrated scene until Ian's team sends captures; drop them into the page's image slots in Framer.
+- **Orbs' black square (Noah).** The sphere is now masked at its own edge, so neither the square frame nor the navy ring can show, on any browser.
+- Also in this build: features sit directly under the hero and the founder note is further down; nav says Marketplace; pricing is Free Preview with the later prices struck through, no trial; no creator program; American spelling throughout; the demo runs as one flow in Ben's order with the memory and language moments in chapter 2.
+
 
 All outside links are already filled in from `LINKS` in EscapeKit: Indiegogo, the beta Discord, Maze, the beta Google Form fallback, the Influencer program, Instagram, TikTok and LinkedIn. **The Indiegogo link is a placeholder (indiegogo.com) until the campaign page is live**: set `LINKS.indiegogo` in EscapeKit. To change one everywhere, edit `LINKS`. Each component's panel can also override its own links.
 

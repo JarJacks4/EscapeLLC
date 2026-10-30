@@ -106,6 +106,8 @@ export const LINKS = {
     influencers: "https://escape-influencer.web.app/",
     maze: "https://t.maze.co/513528542",
     betaForm: "https://forms.gle/yLFiaTAdeg37AhJC6",
+    // Indiegogo campaign (Ben, Oct 29). Replace with the live campaign URL when it opens.
+    indiegogo: "https://www.indiegogo.com/",
     tiktok: "https://www.tiktok.com/@escapeselfcare",
     instagram: "https://www.instagram.com/escapeselfcare",
     facebook: "https://www.facebook.com/profile.php?id=61596011750533",
@@ -567,9 +569,14 @@ export function Orb(props: { mood?: MoodId | null; size?: number | string; live?
                 {/* clip-path + mask as well as border-radius: Safari and some GPUs skip the rounded
                     overflow clip on <video> and blended layers, which showed the loop's square frame
                     behind the sphere (Noah, Oct 28). */}
-                <div style={{ position: "absolute", inset: 0, borderRadius: "50%", overflow: "hidden", isolation: "isolate", background: "#0D1132",
-                    clipPath: "circle(50% at 50% 50%)", WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-                    border: "1px solid rgba(255,255,255,.28)", boxShadow: shadow, transition: "box-shadow .6s var(--esc-ease)" }}>
+                <div style={{ position: "absolute", inset: 0, borderRadius: "50%", overflow: "hidden", isolation: "isolate",
+                    clipPath: "circle(50% at 50% 50%)",
+                    /* The orb frames are rendered on a deep navy background and the sphere fills 90 % of
+                       the frame, so a hard circle clip still showed a navy ring or, when the clip was
+                       skipped, the whole square (Noah, Oct 28; the app had the same bug). The mask fades
+                       the frame out just past the sphere's edge instead: nothing of the background shows. */
+                    WebkitMaskImage: "radial-gradient(circle closest-side, #000 78%, rgba(0,0,0,0) 88%)", maskImage: "radial-gradient(circle closest-side, #000 78%, rgba(0,0,0,0) 88%)",
+                    boxShadow: shadow, transition: "box-shadow .6s var(--esc-ease)" }}>
                     <AnimatePresence initial={false}>
                         <motion.div key={loop} style={{ position: "absolute", inset: 0 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease }}>
                             <OrbMedia loop={loop} live={!!props.live && !reduce} warm={props.warm} eager={props.eager} />

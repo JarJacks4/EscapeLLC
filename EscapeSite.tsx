@@ -117,15 +117,83 @@ async function postPublic(path: string, body: unknown, timeoutMs = 15000): Promi
 // ───────────────────────── outside links (from escapeapp.ai) ─────────────────────────
 
 const LINKS = {
-    // TODO: replace with the Escape campaign page once it is live
-    indiegogo: "https://www.indiegogo.com/",
     discord: "https://discord.gg/WnASA2SfA",
     influencers: "https://escape-influencer.web.app/",
     maze: "https://t.maze.co/513528542",
     betaForm: "https://forms.gle/yLFiaTAdeg37AhJC6",
-    tiktok: "https://www.tiktok.com/@escapeapp",
-    instagram: "https://www.instagram.com/escapeappai",
+    // Indiegogo campaign (Ben, Oct 29). Replace with the live campaign URL when it opens.
+    indiegogo: "https://www.indiegogo.com/",
+    tiktok: "https://www.tiktok.com/@escapeselfcare",
+    instagram: "https://www.instagram.com/escapeselfcare",
+    facebook: "https://www.facebook.com/profile.php?id=61596011750533",
     linkedin: "https://www.linkedin.com/company/escapeappai/",
+}
+
+// ───────────────────────── analytics (Meta Pixel, with consent) ─────────────────────────
+//
+// Noah's Meta Pixel (Business Suite) tracks visits, beta sign-ups and Discord clicks. It loads
+// only after the visitor accepts it in the consent bar (the Cookie Policy says so), because the
+// pixel is a cross-site tracker. Until then every track() call is a no-op.
+
+const PIXEL_ID = "1685481716363748"
+const CONSENT_KEY = "escape.consent.v1"
+type Consent = "accepted" | "declined" | null
+function readConsent(): Consent {
+    if (!isBrowser) return null
+    try { const v = window.localStorage.getItem(CONSENT_KEY); return v === "accepted" || v === "declined" ? v : null } catch { return null }
+}
+function writeConsent(c: Exclude<Consent, null>) {
+    try { window.localStorage.setItem(CONSENT_KEY, c) } catch {}
+    if (c === "accepted") loadPixel()
+}
+let pixelLoaded = false
+function loadPixel(id: string = PIXEL_ID) {
+    if (!isBrowser || pixelLoaded || !id) return
+    pixelLoaded = true
+    const w = window as any
+    if (!w.fbq) {
+        const n: any = (w.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments) })
+        if (!w._fbq) w._fbq = n
+        n.push = n; n.loaded = true; n.version = "2.0"; n.queue = []
+        const t = document.createElement("script"); t.async = true; t.src = "https://connect.facebook.net/en_US/fbevents.js"
+        document.head.appendChild(t)
+    }
+    w.fbq("init", id)
+    w.fbq("track", "PageView")
+}
+/** Standard events: "PageView" | "Lead" (beta application sent) | "Contact" (Discord). Anything else is a custom event. */
+function track(event: string, params?: Record<string, unknown>) {
+    if (!isBrowser) return
+    const w = window as any
+    if (typeof w.fbq !== "function") return
+    const std = ["PageView", "Lead", "Contact", "CompleteRegistration", "ViewContent", "Subscribe"]
+    w.fbq(std.includes(event) ? "track" : "trackCustom", event, params || {})
+}
+/** Loads the pixel on mount when consent was given earlier, and counts a page view on each route change. */
+function useAnalytics(path: string) {
+    React.useEffect(() => { if (readConsent() === "accepted") loadPixel() }, [])
+    const first = React.useRef(true)
+    React.useEffect(() => {
+        if (first.current) { first.current = false; return }
+        track("PageView")
+    }, [path])
+}
+
+/** The consent bar: shown once until the visitor picks. Decline is as easy as accept. */
+function ConsentBar(p: { policyHref: string }) {
+    const [c, setC] = React.useState<Consent>("declined")
+    React.useEffect(() => { setC(readConsent()) }, [])
+    if (c) return null
+    const pick = (v: Exclude<Consent, null>) => { writeConsent(v); setC(v) }
+    return (
+        <div className="esc-consent" role="region" aria-label="Cookies and analytics">
+            <p className="esc-small" style={{ margin: 0 }}>We use the Meta Pixel to see which pages lead people to the beta. Only if you say yes. No ads in Escape, ever. <a className="esc-link" href={p.policyHref}>Cookie Policy</a></p>
+            <div className="esc-row" style={{ gap: 8, flexWrap: "nowrap" }}>
+                <button type="button" className="esc-btn esc-btn-g esc-btn-sm" onClick={() => pick("declined")}>No thanks</button>
+                <button type="button" className="esc-btn esc-btn-p esc-btn-sm" onClick={() => pick("accepted")}>Okay</button>
+            </div>
+        </div>
+    )
 }
 
 // ───────────────────────── routes ─────────────────────────
@@ -140,6 +208,9 @@ const ROUTES = {
     beta: "/app-testing",
     demo: "/app-demo",
     privacy: "/privacy-policy",
+    health: "/consumer-health-data",
+    safety: "/safety",
+    deleteAccount: "/delete-account",
     terms: "/terms",
     cookies: "/cookie-policy",
 }
@@ -311,6 +382,8 @@ const CSS = `
 .esc-btn-g{color:var(--esc-ink);background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));border:1px solid var(--esc-border);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .esc-btn-g:hover{border-color:var(--esc-accent)}
 .esc-btn-sm{min-height:44px;padding:0 18px;font-size:15px}
+.esc-consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:60;margin:0 auto;max-width:720px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;border-radius:20px;border:1px solid var(--esc-border);background:color-mix(in srgb,var(--esc-bg) 92%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 18px 48px rgba(0,0,0,.28)}
+.esc-consent p{flex:1 1 320px}
 .esc a:focus-visible,.esc button:focus-visible,.esc [tabindex]:focus-visible{outline:3px solid var(--esc-accent);outline-offset:3px;border-radius:14px}
 .esc-chip{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:500;color:var(--esc-muted);background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));border:1px solid var(--esc-border)}
 .esc-dot{width:8px;height:8px;border-radius:50%;background:var(--esc-gold);box-shadow:0 0 12px var(--esc-gold)}
@@ -508,8 +581,17 @@ function Orb(props: { mood?: MoodId | null; size?: number | string; live?: boole
                 <span key={i} aria-hidden style={{ position: "absolute", inset: 0, borderRadius: "50%", border: `1px solid ${g}`, transition: "border-color .6s", animation: `esc-ring 3.6s ${i * 1.8}s var(--esc-ease) infinite` }} />
             ))}
             <div style={{ position: "absolute", inset: 0, animation: props.breathe === false || reduce ? undefined : "esc-breathe 3s var(--esc-ease) infinite" }}>
-                <div style={{ position: "absolute", inset: 0, borderRadius: "50%", overflow: "hidden", isolation: "isolate", background: "#0D1132",
-                    border: "1px solid rgba(255,255,255,.28)", boxShadow: shadow, transition: "box-shadow .6s var(--esc-ease)" }}>
+                {/* clip-path + mask as well as border-radius: Safari and some GPUs skip the rounded
+                    overflow clip on <video> and blended layers, which showed the loop's square frame
+                    behind the sphere (Noah, Oct 28). */}
+                <div style={{ position: "absolute", inset: 0, borderRadius: "50%", overflow: "hidden", isolation: "isolate",
+                    clipPath: "circle(50% at 50% 50%)",
+                    /* The orb frames are rendered on a deep navy background and the sphere fills 90 % of
+                       the frame, so a hard circle clip still showed a navy ring or, when the clip was
+                       skipped, the whole square (Noah, Oct 28; the app had the same bug). The mask fades
+                       the frame out just past the sphere's edge instead: nothing of the background shows. */
+                    WebkitMaskImage: "radial-gradient(circle closest-side, #000 78%, rgba(0,0,0,0) 88%)", maskImage: "radial-gradient(circle closest-side, #000 78%, rgba(0,0,0,0) 88%)",
+                    boxShadow: shadow, transition: "box-shadow .6s var(--esc-ease)" }}>
                     <AnimatePresence initial={false}>
                         <motion.div key={loop} style={{ position: "absolute", inset: 0 }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.6, ease }}>
                             <OrbMedia loop={loop} live={!!props.live && !reduce} warm={props.warm} eager={props.eager} />
@@ -579,9 +661,16 @@ function OrbMedia({ loop, live, eager, warm }: { loop: string; live: boolean; ea
     }, [live, mounted])
     const grid = loop.split("_")[1] // calm | focus | picks
     const fb = fallbackBase()
+    // A standalone preview (window.__escapeOrbFallback) can't reach Firebase: use the local
+    // poster of the offline loop. A poster that fails to load is hidden, never a broken-image box.
+    const localPoster = isBrowser && (window as any).__escapeOrbFallback
+    const [posterOk, setPosterOk] = React.useState(true)
     return (
         <>
-            <img src={orbPoster(loop)} alt="" draggable={false} style={fitStyle(loop)} loading={eager ? "eager" : "lazy"} decoding="async" />
+            {posterOk && (
+                <img src={localPoster ? `${fb}escape_${grid}_e50_t50_v3_540_offline_poster.webp` : orbPoster(loop)} alt="" draggable={false}
+                    style={fitStyle(localPoster ? `offline_${grid}` : loop)} loading={eager ? "eager" : "lazy"} decoding="async" onError={() => setPosterOk(false)} />
+            )}
             {mounted && (
                 <video
                     ref={v}
@@ -833,7 +922,7 @@ function ClosingCta(props: { eyebrow?: string; title: React.ReactNode; lede: str
                         <p className="esc-lede" style={{ margin: "0 auto" }}>{props.lede}</p>
                         <div className="esc-row" style={{ gap: 12, justifyContent: "center", marginTop: 6 }}>
                             <Button href={props.primary.href} arrow>{props.primary.label}</Button>
-                            {props.secondary && <Button href={props.secondary.href} variant="ghost">{props.secondary.label}</Button>}
+                            {props.secondary && <Button href={props.secondary.href} variant="ghost" newTab={/^https?:/.test(props.secondary.href)} onClick={() => { if (/discord/i.test(props.secondary!.href)) track("Contact", { content_name: "discord", placement: "closing_cta" }) }}>{props.secondary.label}</Button>}
                         </div>
                         {props.badges && <div style={{ marginTop: 10 }}><StoreBadges appStoreUrl={props.appStoreUrl} playUrl={props.playUrl} /></div>}
                     </div>
@@ -1405,6 +1494,13 @@ const __SiteNav = (() => {
     /**
      */
     function SiteNav(p: Props) {
+        const [path, setPath] = React.useState("")
+        React.useEffect(() => {
+            const f = () => setPath(window.location.pathname + window.location.hash)
+            f(); window.addEventListener("hashchange", f); window.addEventListener("popstate", f)
+            return () => { window.removeEventListener("hashchange", f); window.removeEventListener("popstate", f) }
+        }, [])
+        useAnalytics(path)
         const s = useEscape()
         const [open, setOpen] = React.useState(false)
         const [scrolled, setScrolled] = React.useState(false)
@@ -1435,6 +1531,7 @@ const __SiteNav = (() => {
             <Page bare style={{ background: "transparent" }}>
                 <style>{NAV_CSS}</style>
                 <FlightOrb />
+                <ConsentBar policyHref={ROUTES.cookies} />
                 <nav className={`nav ${scrolled ? "scrolled" : ""}`} aria-label="Main">
                     <a className="nav-mark esc-d" href={p.homeHref} aria-label="Escape home">ESCAPE<sup>™</sup></a>
                     <ul className="nav-links">
@@ -1564,15 +1661,16 @@ const __SiteFooter = (() => {
         instagramUrl: string
         tiktokUrl: string
         linkedinUrl: string
+        facebookUrl: string
     }
 
     /**
      */
     function SiteFooter(p: Props) {
         const cols = [
-            { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Indiegogo", LINKS.indiegogo]] },
-            { title: "Rewards", links: [["Marketplace", ROUTES.marketplace], ["Influencer program", LINKS.influencers], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
-            { title: "Company", links: [["Privacy Policy", ROUTES.privacy], ["Terms of Service", ROUTES.terms], ["Cookie Policy", ROUTES.cookies], ["Contact", `mailto:${p.contactEmail}`]] },
+            { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Discord", LINKS.discord]] },
+            { title: "Rewards", links: [["Marketplace", ROUTES.marketplace], ["Influencer program", LINKS.influencers], ["Back us on Indiegogo", LINKS.indiegogo], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
+            { title: "Company", links: [["Privacy Policy", ROUTES.privacy], ["Consumer Health Data", ROUTES.health], ["Terms of Service", ROUTES.terms], ["Safety", ROUTES.safety], ["Cookie Policy", ROUTES.cookies], ["Contact", `mailto:${p.contactEmail}`]] },
         ]
         return (
             <Page>
@@ -1587,13 +1685,14 @@ const __SiteFooter = (() => {
                             <div className="esc-row" style={{ gap: 18 }}>
                                 {p.instagramUrl && <a className="esc-link" href={p.instagramUrl} target="_blank" rel="noopener noreferrer">Instagram</a>}
                                 {p.tiktokUrl && <a className="esc-link" href={p.tiktokUrl} target="_blank" rel="noopener noreferrer">TikTok</a>}
+                                {p.facebookUrl && <a className="esc-link" href={p.facebookUrl} target="_blank" rel="noopener noreferrer">Facebook</a>}
                                 {p.linkedinUrl && <a className="esc-link" href={p.linkedinUrl} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
                             </div>
                         </div>
                         {cols.map((c) => (
                             <nav key={c.title} aria-label={c.title} className="foot-col">
                                 <h2 className="esc-over" style={{ margin: "0 0 14px" }}>{c.title}</h2>
-                                <ul>{c.links.map(([l, h]) => { const ext = /^https?:/.test(h); return <li key={l}><a href={h} target={ext ? "_blank" : undefined} rel={ext ? "noopener noreferrer" : undefined}>{l}{ext && <span className="esc-sr"> (opens in a new tab)</span>}</a></li> })}</ul>
+                                <ul>{c.links.map(([l, h]) => { const ext = /^https?:/.test(h); return <li key={l}><a href={h} target={ext ? "_blank" : undefined} rel={ext ? "noopener noreferrer" : undefined} onClick={h === LINKS.indiegogo ? () => track("IndiegogoClick", { placement: "footer" }) : h === LINKS.discord ? () => track("Contact", { content_name: "discord", placement: "footer" }) : undefined}>{l}{ext && <span className="esc-sr"> (opens in a new tab)</span>}</a></li> })}</ul>
                             </nav>
                         ))}
                         <div className="esc-glass foot-access">
@@ -1641,6 +1740,7 @@ const __SiteFooter = (() => {
         playUrl: "",
         contactEmail: "privacy@escapeapp.ai",
         instagramUrl: LINKS.instagram,
+        facebookUrl: LINKS.facebook,
         tiktokUrl: LINKS.tiktok,
         linkedinUrl: LINKS.linkedin,
     }
@@ -1657,6 +1757,7 @@ const __SiteFooter = (() => {
         instagramUrl: { type: ControlType.Link, title: "Instagram" },
         tiktokUrl: { type: ControlType.Link, title: "TikTok" },
         linkedinUrl: { type: ControlType.Link, title: "LinkedIn" },
+        facebookUrl: { type: ControlType.Link, title: "Facebook" },
     })
     return { default: SiteFooter }
 })()
@@ -1939,6 +2040,7 @@ const __HomePage = (() => {
                         <div className="esc-row" style={{ gap: 12, marginTop: 8 }}>
                             <Button href={p.primaryHref} arrow>{p.primaryLabel}</Button>
                             <Button href={p.demoHref} variant="ghost" icon={<span className="hero-play"><Icon name="play" size={12} /></span>}>Watch the app demo</Button>
+                            <Button href={LINKS.indiegogo} variant="ghost" newTab onClick={() => track("IndiegogoClick", { placement: "home_hero" })}>Back us on Indiegogo</Button>
                         </div>
                         <ul className="hero-trust">
                             <li><Icon name="shield" size={18} /> Private by design</li>
@@ -2547,7 +2649,7 @@ const __MarketplacePage = (() => {
                         ]} />
                     </div>
                 </section>
-                <ClosingCta eyebrow="Escape Marketplace" title={<>Start earning for <span className="esc-gold">taking care of you</span></>} lede="Join early, earn from day one, and redeem what you've earned." primary={{ label: "Get early access", href: p.primaryHref }} secondary={{ label: "Support on Indiegogo", href: LINKS.indiegogo }} />
+                <ClosingCta eyebrow="Escape Marketplace" title={<>Start earning for <span className="esc-gold">taking care of you</span></>} lede="Join early, earn from day one, and redeem what you've earned." primary={{ label: "Get early access", href: p.primaryHref }} secondary={{ label: "Join the Discord", href: LINKS.discord }} />
             </Page>
         )
     }
@@ -2872,12 +2974,12 @@ const __InnerversePage = (() => {
     interface Props { waitlistHref: string; santoriniImage: any; costaRicaImage: any; world1: any; world2: any; world3: any; world4: any; world5: any; world6: any }
 
     const REALMS = [
-        { name: "Enchanted Forest", body: "Sun-dappled ancient redwoods and whispering foliage for grounding.", g: "linear-gradient(160deg,#1E5B3A,#0C2A1E 60%,#08160F)", glow: "#7ED6A1" },
-        { name: "Ocean Depths", body: "Weightless bioluminescent currents that slow your breathing.", g: "linear-gradient(170deg,#0D4B78,#06213F 60%,#030E1F)", glow: "#4CF6F6" },
+        { name: "Enchanted Forest", body: "Sun-dappled ancient redwoods and whispering foliage for grounding.", g: "linear-gradient(180deg,#9BD5A8 0%,#2F7A52 38%,#0C2A1E 100%)", glow: "#7ED6A1" },
+        { name: "Ocean Depths", body: "Weightless bioluminescent currents that slow your breathing.", g: "linear-gradient(180deg,#5FB7E8 0%,#0D4B78 45%,#06213F 100%)", glow: "#4CF6F6" },
         { name: "Cosmic Realm", body: "Float among starlight and soft nebulae for expansive calm.", g: "radial-gradient(120% 90% at 70% 20%,#5B3AA8,#1A1648 50%,#05081A)", glow: "#B9A3F0" },
-        { name: "Sacred Temple", body: "Mist-wrapped mountain courtyards and resonant singing bowls.", g: "linear-gradient(170deg,#8A5A2B,#3B2414 60%,#1A0F08)", glow: "#F5C26B" },
+        { name: "Sacred Temple", body: "Mist-wrapped mountain courtyards and resonant singing bowls.", g: "linear-gradient(180deg,#F6D7A6 0%,#C98A4A 42%,#4A2A12 100%)", glow: "#F5C26B" },
         { name: "Crystal Cavern", body: "Acoustic mineral chambers that echo harmonic frequencies.", g: "linear-gradient(160deg,#3D3190,#1F37A8 45%,#0B1230)", glow: "#9CC2FF" },
-        { name: "Mountain Summit", body: "Crisp alpine dawn above a sea of clouds to awaken focus.", g: "linear-gradient(180deg,#F0A55A,#C85A7A 35%,#2A2366 75%,#0B1230)", glow: "#FFE2BF" },
+        { name: "Mountain Summit", body: "Crisp alpine dawn above a sea of clouds to awaken focus.", g: "linear-gradient(180deg,#FFD8A8 0%,#F0A55A 30%,#C85A7A 60%,#2A2366 100%)", glow: "#FFE2BF" },
     ]
 
     /**
@@ -2928,14 +3030,14 @@ const __InnerversePage = (() => {
                 <section className="esc-sec">
                     <Backdrop intensity={0.55} />
                     <div className="esc-wrap">
-                        <SectionHead center eyebrow="Six worlds · screenshots" title="See the worlds" lede="A look at each world in the Innerverse. Each one supports a different part of your wellbeing." />
+                        <SectionHead center eyebrow="Six worlds · screenshots" title="See the worlds" lede="Captures from the build in progress. Each world supports a different part of your wellbeing, and each one has its own mini games." />
                         <div className="esc-grid g3">
                             {REALMS.map((r, i) => {
                                 const shot = src((p as any)[`world${i + 1}`])
                                 return (
                                 <Reveal key={r.name} delay={i * 0.05} className="esc-glass esc-lift iv-realm">
-                                    <div className="iv-art" style={{ background: shot ? `center/cover url(${shot})` : r.g }} role="img" aria-label={shot ? `${r.name} screenshot` : `${r.name}: screenshot coming soon`}>
-                                        {!shot && <><span style={{ background: `radial-gradient(closest-side, ${r.glow}, transparent)` }} /><em className="iv-ph"><Icon name="cube" size={16} />Screenshot coming soon</em></>}
+                                    <div className="iv-art" style={{ background: shot ? `center/cover url(${shot})` : r.g }} role="img" aria-label={shot ? `${r.name} screenshot` : `${r.name}, illustrated`}>
+                                        {!shot && <><WorldScene index={i} glow={r.glow} /><em className="iv-ph iv-ph-soft">Concept art · in development</em></>}
                                     </div>
                                     <div className="esc-stack" style={{ gap: 8, padding: "20px 22px 24px" }}>
                                         <div className="esc-row" style={{ justifyContent: "space-between", gap: 8 }}>
@@ -3000,6 +3102,104 @@ const __InnerversePage = (() => {
         )
     }
 
+    /**
+     * One drawn scene per world, so the cards read as places before the real renders arrive:
+     * forest (redwoods and light shafts), ocean (swells and bioluminescent motes), cosmic (nebula,
+     * ringed planet and stars), temple (mist bands and a courtyard roofline), cavern (crystal
+     * shards), summit (peaks above a cloud sea). Pure SVG, no images. Motion is a slow drift only,
+     * and none at all with Reduce Motion.
+     */
+    function WorldScene({ index, glow }: { index: number; glow: string }) {
+        const reduce = useReducedMotion()
+        const drift = reduce ? undefined : "iv-drift 14s ease-in-out infinite alternate"
+        const common = { width: "100%", height: "100%", position: "absolute" as const, inset: 0 }
+        const id = `ivw${index}`
+        const scenes: React.ReactNode[] = [
+            // 0 forest
+            <svg key="f" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+                <defs><linearGradient id={`${id}a`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#B9F0CB" stopOpacity=".55" /><stop offset="1" stopColor="#B9F0CB" stopOpacity="0" /></linearGradient></defs>
+                <g style={{ animation: drift, transformOrigin: "50% 0" }}>
+                    <polygon points="120,0 160,0 230,200 150,200" fill={`url(#${id}a)`} />
+                    <polygon points="190,0 215,0 300,200 250,200" fill={`url(#${id}a)`} opacity=".6" />
+                </g>
+                {[[18, 150, 46], [64, 170, 60], [120, 160, 52], [182, 176, 64], [238, 158, 50], [292, 172, 58]].map(([x, y, h], k) => (
+                    <g key={k} fill="#061A10">
+                        <rect x={x - 4} y={y - h * 0.35} width="8" height={h * 0.35 + 40} />
+                        <polygon points={`${x - 26},${y} ${x},${y - h} ${x + 26},${y}`} />
+                        <polygon points={`${x - 20},${y - h * 0.3} ${x},${y - h * 1.15} ${x + 20},${y - h * 0.3}`} />
+                    </g>
+                ))}
+                <rect x="0" y="176" width="320" height="24" fill="#04120B" />
+                {[[70, 120], [150, 90], [210, 130], [260, 70], [40, 60]].map(([x, y], k) => <circle key={k} cx={x} cy={y} r="1.6" fill={glow} opacity=".8" />)}
+            </svg>,
+            // 1 ocean
+            <svg key="o" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+                <g style={{ animation: drift }}>
+                    <path d="M-20,70 C40,50 80,90 140,70 S240,50 340,72 L340,210 L-20,210 Z" fill="#0A3F66" opacity=".9" />
+                    <path d="M-20,105 C50,85 90,125 160,105 S260,88 340,108 L340,210 L-20,210 Z" fill="#072C4A" />
+                    <path d="M-20,145 C60,125 110,165 180,145 S280,128 340,150 L340,210 L-20,210 Z" fill="#041A2E" />
+                </g>
+                {[[40, 160, 2.2], [92, 182, 1.4], [150, 170, 2.6], [205, 188, 1.6], [258, 166, 2], [300, 184, 1.2], [120, 130, 1.3], [230, 120, 1.1]].map(([x, y, r], k) => (
+                    <circle key={k} cx={x} cy={y} r={r} fill={glow} opacity=".85" />
+                ))}
+                <ellipse cx="160" cy="40" rx="120" ry="36" fill="#FFFFFF" opacity=".06" />
+            </svg>,
+            // 2 cosmic
+            <svg key="c" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+                <defs><radialGradient id={`${id}n`} cx=".3" cy=".4" r=".7"><stop offset="0" stopColor="#B9A3F0" stopOpacity=".55" /><stop offset="1" stopColor="#B9A3F0" stopOpacity="0" /></radialGradient></defs>
+                <ellipse cx="110" cy="80" rx="150" ry="90" fill={`url(#${id}n)`} style={{ animation: drift }} />
+                <g transform="translate(226 112) rotate(-18)">
+                    <circle r="30" fill="#2A1F5E" />
+                    <circle r="30" fill="#8E7CD9" opacity=".35" />
+                    <ellipse rx="54" ry="10" fill="none" stroke="#E6EAF4" strokeOpacity=".55" strokeWidth="2" />
+                </g>
+                {[[20, 30], [60, 120], [95, 20], [140, 150], [170, 60], [200, 30], [260, 40], [300, 90], [280, 170], [40, 180], [120, 100], [240, 180]].map(([x, y], k) => (
+                    <circle key={k} cx={x} cy={y} r={k % 3 === 0 ? 1.8 : 1} fill="#FFFFFF" opacity={k % 2 ? ".9" : ".6"} />
+                ))}
+            </svg>,
+            // 3 temple
+            <svg key="t" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+                <circle cx="250" cy="52" r="26" fill="#F5C26B" opacity=".75" />
+                <g fill="#2A1507">
+                    <path d="M0,200 L0,150 C40,140 60,120 100,124 C140,128 150,100 200,106 C250,112 280,96 320,104 L320,200 Z" />
+                    <rect x="118" y="96" width="84" height="60" />
+                    <path d="M100,98 C130,78 190,78 220,98 L205,96 C185,84 135,84 115,96 Z" />
+                    <path d="M108,112 L212,112 L202,100 L118,100 Z" />
+                    <rect x="140" y="120" width="8" height="36" fill="#3B2414" /><rect x="172" y="120" width="8" height="36" fill="#3B2414" />
+                </g>
+                <g style={{ animation: drift }}>
+                    {[[0, 140, 180], [120, 162, 220], [60, 184, 300]].map(([x, y, w], k) => <rect key={k} x={x} y={y} width={w} height="10" rx="5" fill="#E6EAF4" opacity={0.16 - k * 0.03} />)}
+                </g>
+            </svg>,
+            // 4 cavern
+            <svg key="k" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+                <defs><linearGradient id={`${id}c`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#9CC2FF" /><stop offset="1" stopColor="#3D3190" /></linearGradient></defs>
+                <rect x="0" y="0" width="320" height="200" fill="#0B1230" opacity=".35" />
+                {[[30, 200, 70, 26], [80, 200, 130, 36], [140, 200, 90, 22], [200, 200, 150, 40], [262, 200, 100, 28]].map(([x, y, h, w], k) => (
+                    <polygon key={k} points={`${x - w / 2},${y} ${x},${y - h} ${x + w / 2},${y}`} fill={`url(#${id}c)`} opacity={0.85 - k * 0.08} />
+                ))}
+                {[[60, 0, 60, 24], [170, 0, 90, 30], [250, 0, 50, 20]].map(([x, y, h, w], k) => (
+                    <polygon key={k} points={`${x - w / 2},${y} ${x},${y + h} ${x + w / 2},${y}`} fill={`url(#${id}c)`} opacity=".55" />
+                ))}
+                <g style={{ animation: drift }}>{[[110, 120], [200, 90], [60, 70], [270, 130]].map(([x, y], k) => <circle key={k} cx={x} cy={y} r="2" fill={glow} opacity=".9" />)}</g>
+            </svg>,
+            // 5 summit
+            <svg key="s" viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" style={common} aria-hidden>
+                <circle cx="92" cy="74" r="34" fill="#FFE2BF" opacity=".9" />
+                <g fill="#2A2366">
+                    <polygon points="0,200 70,90 120,150 160,80 215,140 250,96 320,200" />
+                    <polygon points="40,200 120,110 180,200" opacity=".8" />
+                </g>
+                <polygon points="150,96 160,80 170,96" fill="#E6EAF4" opacity=".9" />
+                <g style={{ animation: drift }}>
+                    {[[0, 160, 150, 26], [120, 150, 220, 30], [220, 168, 140, 22]].map(([x, y, w, h], k) => <ellipse key={k} cx={x + w / 2} cy={y} rx={w / 2} ry={h / 2} fill="#F3EEF9" opacity={0.9 - k * 0.15} />)}
+                    <rect x="0" y="166" width="320" height="40" fill="#F3EEF9" opacity=".8" />
+                </g>
+            </svg>,
+        ]
+        return <>{scenes[index % scenes.length]}</>
+    }
+
     function Postcard(p: { title: string; place: string; body: string; img: string; g: string; delay?: number }) {
         return (
             <Reveal delay={p.delay} className="esc-glass esc-lift iv-card">
@@ -3029,7 +3229,9 @@ const __InnerversePage = (() => {
     .iv-art{position:relative;height:150px;overflow:hidden}
     .iv-art{aspect-ratio:16/10;height:auto}
     .iv-art span{position:absolute;width:60%;aspect-ratio:1;left:20%;top:10%;opacity:.55;filter:blur(8px)}
+    @keyframes iv-drift{from{transform:translate3d(-6px,0,0)}to{transform:translate3d(6px,2px,0)}}
     .iv-ph{position:absolute;left:50%;top:50%;translate:-50% -50%;display:inline-flex;gap:8px;align-items:center;font-style:normal;font-size:13px;padding:6px 12px;border-radius:999px;background:rgba(11,18,48,.6);color:#E6EAF4;border:1px dashed rgba(230,234,244,.45);white-space:nowrap}
+    .iv-ph-soft{left:14px;top:auto;bottom:12px;translate:0 0;border-style:solid;border-color:rgba(230,234,244,.22);background:rgba(11,18,48,.55);font-size:12px}
     .iv-avatar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4cqi,64px);align-items:center}
     .iv-preview{position:relative;border-radius:36px;aspect-ratio:4/5;overflow:hidden;background:radial-gradient(80% 60% at 50% 35%,color-mix(in oklab,var(--esc-accent) 30%,transparent),transparent),linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2))}
     .iv-avatar-orb{position:absolute;left:50%;top:46%;width:46%;translate:-50% -50%}
@@ -3038,7 +3240,13 @@ const __InnerversePage = (() => {
     @container (max-width:900px){.iv-avatar{grid-template-columns:minmax(0,1fr)}}
     `
 
-    InnerversePage.defaultProps = { waitlistHref: ROUTES.beta, santoriniImage: "", costaRicaImage: "", world1: "", world2: "", world3: "", world4: "", world5: "", world6: "" }
+    InnerversePage.defaultProps = {
+        waitlistHref: ROUTES.beta, santoriniImage: "", costaRicaImage: "",
+        // Captures from the Unreal build (Oct 29): forest, temple and cavern. Replace from Framer any time.
+        world1: MEDIA_BASE + "innerverse/world_forest.jpg", world2: "", world3: "",
+        world4: MEDIA_BASE + "innerverse/world_temple.jpg",
+        world5: MEDIA_BASE + "innerverse/world_cavern.jpg", world6: "",
+    }
     addPropertyControls(InnerversePage, {
         waitlistHref: { type: ControlType.Link, title: "Waitlist link" },
         santoriniImage: { type: ControlType.Image, title: "Santorini image" },
@@ -3059,7 +3267,7 @@ const __BetaPage = (() => {
     //
     // The flow (mirrors escapeapp.ai/beta-test, made into one guided journey):
     //   hero → why join → APPLY (4 short steps, on the page) → "You're on the list" with your place →
-    //   what happens next → Discord + Maze → FAQ → support on Indiegogo.
+    //   what happens next → Discord + Maze → FAQ → join the Discord.
     // Applications go to POST /v1/public/beta-apply on the Lucille API (stored for the team, one per
     // email). If the API can't be reached, the visitor is offered the Google Form instead.
 
@@ -3070,8 +3278,8 @@ const __BetaPage = (() => {
         testLength: string
         reviewTime: string
         discordUrl: string
-        mazeUrl: string
         indiegogoUrl: string
+        mazeUrl: string
         fallbackFormUrl: string
         privacyHref: string
     }
@@ -3094,7 +3302,8 @@ const __BetaPage = (() => {
                             <p className="esc-lede">Help shape a calmer kind of self-care app. Get Lucille early, tell us what works, and get a founding tester badge plus your first year of the Journey Pass free after launch.</p>
                             <div className="esc-row" style={{ gap: 12 }}>
                                 <Button onClick={toApply} arrow>Apply in 2 minutes</Button>
-                                <Button href={p.indiegogoUrl} variant="ghost" newTab>Support on Indiegogo</Button>
+                                <Button href={p.indiegogoUrl} variant="ghost" newTab onClick={() => track("IndiegogoClick", { placement: "beta_hero" })}>Back us on Indiegogo</Button>
+                                <Button href={p.discordUrl} variant="ghost" newTab onClick={() => track("Contact", { content_name: "discord", placement: "beta_hero" })}>Join the Discord</Button>
                             </div>
                             <ul className="be-trust">
                                 <li><Icon name="check" size={18} />Free to join</li>
@@ -3164,7 +3373,7 @@ const __BetaPage = (() => {
                             <span className="esc-icon"><Icon name="users" /></span>
                             <h3 className="esc-d esc-h3" style={{ marginTop: 6 }}>Connect on Discord</h3>
                             <p className="esc-p">Real-time feedback channels, weekly team AMAs, beta announcements and community challenges. Accepted testers get an invite automatically.</p>
-                            <div style={{ marginTop: "auto" }}><Button href={p.discordUrl} variant="ghost" small newTab arrow>Join the Discord</Button></div>
+                            <div style={{ marginTop: "auto" }}><Button href={p.discordUrl} variant="ghost" small newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_connect" })}>Join the Discord</Button></div>
                         </Card>
                         <Card className="esc-stack" style={{ gap: 14 }} delay={0.06}>
                             <span className="esc-icon"><Icon name="flask" /></span>
@@ -3194,10 +3403,14 @@ const __BetaPage = (() => {
                         <Reveal className="esc-glass esc-glow be-ks">
                             <div className="esc-stack" style={{ gap: 8 }}>
                                 <span className="esc-over">Can't wait for a spot?</span>
-                                <h2 className="esc-d" style={{ fontSize: "clamp(26px,3cqi,36px)", margin: 0 }}>Back Escape on Indiegogo</h2>
-                                <p className="esc-p">Supporters get exclusive early access and help bring Lucille to everyone.</p>
+                                <h2 className="esc-d" style={{ fontSize: "clamp(26px,3cqi,36px)", margin: 0 }}>Come say hi on Discord</h2>
+                                <p className="esc-p">Meet the team and other testers, see what's shipping, and try a Maze study while you wait.</p>
                             </div>
-                            <Button href={p.indiegogoUrl} newTab arrow>Support the campaign</Button>
+                            <div className="esc-row" style={{ gap: 10 }}>
+                                <Button href={p.discordUrl} newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_card" })}>Join the Discord</Button>
+                                <Button href={p.mazeUrl} variant="ghost" newTab>Try a Maze study</Button>
+                                <Button href={p.indiegogoUrl} variant="ghost" newTab onClick={() => track("IndiegogoClick", { placement: "beta_card" })}>Back us on Indiegogo</Button>
+                            </div>
                         </Reveal>
                     </div>
                 </section>
@@ -3211,7 +3424,7 @@ const __BetaPage = (() => {
         { id: "focus", label: "Find focus" }, { id: "slow_down", label: "Slow down" }, { id: "sleep", label: "Sleep better" },
         { id: "lighter", label: "Feel lighter" }, { id: "move", label: "Move my body" }, { id: "kind", label: "Be kind to myself" }, { id: "explore", label: "Just explore" },
     ]
-    const SOURCES = ["TikTok", "Instagram", "A friend", "Indiegogo", "Discord", "LinkedIn", "Other"]
+    const SOURCES = ["TikTok", "Instagram", "A friend", "Discord", "LinkedIn", "Other"]
     const STEPS = ["You", "Your phone", "What you'd love", "Stay in touch"]
 
     interface Form { name: string; email: string; age: boolean; device: "" | "iphone" | "android" | "both"; deviceModel: string; goals: string[]; source: string; discord: boolean; maze: boolean; consent: boolean }
@@ -3258,7 +3471,7 @@ const __BetaPage = (() => {
                 ageConfirmed: f.age, consent: f.consent,
             })
             setBusy(false)
-            if (res.ok && res.data?.ok) { setDone({ position: res.data.position, duplicate: res.data.duplicate }); try { sessionStorage.removeItem(DRAFT) } catch {} }
+            if (res.ok && res.data?.ok) { setDone({ position: res.data.position, duplicate: res.data.duplicate }); track("Lead", { content_name: "beta_application", device: f.device }); try { sessionStorage.removeItem(DRAFT) } catch {} }
             else if (res.status === 422 && res.data?.detail) setErrors({ form: typeof res.data.detail === "string" ? res.data.detail : "Please check your answers." })
             else setFailed(true)
         }
@@ -3281,8 +3494,8 @@ const __BetaPage = (() => {
                         <li><span>4</span>Test · ~{p.testLength}</li>
                     </ol>
                     <div className="esc-row" style={{ gap: 10, justifyContent: "center" }}>
-                        <Button href={p.discordUrl} newTab arrow>Join the Discord now</Button>
-                        <Button href={p.indiegogoUrl} variant="ghost" newTab>Support on Indiegogo</Button>
+                        <Button href={p.discordUrl} newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_done" })}>Join the Discord now</Button>
+                        <Button href={p.mazeUrl} variant="ghost" newTab>Try a Maze study</Button>
                     </div>
                 </motion.div>
             )
@@ -3487,8 +3700,8 @@ const __BetaPage = (() => {
         testLength: "4 weeks",
         reviewTime: "48 hours",
         discordUrl: LINKS.discord,
-        mazeUrl: LINKS.maze,
         indiegogoUrl: LINKS.indiegogo,
+        mazeUrl: LINKS.maze,
         fallbackFormUrl: LINKS.betaForm,
         privacyHref: ROUTES.privacy,
     }
@@ -3496,8 +3709,8 @@ const __BetaPage = (() => {
         testLength: { type: ControlType.String, title: "Test length" },
         reviewTime: { type: ControlType.String, title: "Review time" },
         discordUrl: { type: ControlType.Link, title: "Discord" },
+        indiegogoUrl: { type: ControlType.Link, title: "Indiegogo link" },
         mazeUrl: { type: ControlType.Link, title: "Maze" },
-        indiegogoUrl: { type: ControlType.Link, title: "Indiegogo" },
         fallbackFormUrl: { type: ControlType.Link, title: "Backup form" },
         privacyHref: { type: ControlType.Link, title: "Privacy link" },
     })
@@ -3530,10 +3743,10 @@ const __DemoPage = (() => {
         voiceReward: string
         soundscape: string
         waitlistHref: string
-        crowdfundHref: string
+        discordHref: string
     }
 
-    const SOUND_KEYS = { mood: "voiceMood", listen: "voiceListen", memory: "voiceMemory", forest: "voiceSoundscape", move: "voiceMove", reward: "voiceReward", music: "soundscape" } as const
+    const SOUND_KEYS = { mood: "voiceMood", listen: "voiceListen", memory: "voiceMemory", lang: "voiceLanguage", forest: "voiceSoundscape", move: "voiceMove", reward: "voiceReward", music: "soundscape" } as const
     type Cue = { at: number; sound: keyof typeof SOUND_KEYS } | { at: number; chime: "tick" | "coin" | "done" }
     interface Chapter { id: string; n: number; title: string; body: string; icon: IconName; dur: number; cues: Cue[]; captions: { at: number; to: number; text: string }[] }
 
@@ -3545,10 +3758,10 @@ const __DemoPage = (() => {
             captions: [{ at: 7300, to: 9800, text: "Here's what I noticed…" }, { at: 9800, to: 17200, text: "Because you're feeling restless, a one-minute reset gives that energy somewhere slow to go." }],
         },
         {
-            id: "lucille", n: 2, title: "Lucille", icon: "chat", dur: 16000,
+            id: "lucille", n: 2, title: "Lucille", icon: "chat", dur: 20000,
             body: "She picks up from your mood reading, remembers past sessions and speaks over 120 languages.",
-            cues: [{ at: 2900, sound: "listen" }, { at: 6600, sound: "memory" }],
-            captions: [{ at: 2900, to: 5600, text: "I'm here. Tell me a little more about that." }, { at: 6600, to: 8500, text: "Continue where you left off." }],
+            cues: [{ at: 2900, sound: "listen" }, { at: 6600, sound: "memory" }, { at: 11800, sound: "lang" }],
+            captions: [{ at: 2900, to: 5600, text: "I'm here. Tell me a little more about that." }, { at: 6600, to: 10800, text: "Last week you said mornings were the hardest. How did this one go?" }, { at: 11800, to: 14600, text: "Y si prefieres, podemos hablar en español." }, { at: 14600, to: 18800, text: "Lucille speaks over 120 languages. Switch any time." }],
         },
         {
             id: "sound", n: 3, title: "Soundscapes", icon: "wave", dur: 24000,
@@ -3618,7 +3831,7 @@ const __DemoPage = (() => {
             }
             audio.current = map
             return () => Object.values(map).forEach((a) => { a.pause(); a.removeAttribute("src"); a.load() })
-        }, [p.voiceMood, p.voiceListen, p.voiceMemory, p.voiceSoundscape, p.voiceMove, p.voiceReward, p.soundscape])
+        }, [p.voiceMood, p.voiceListen, p.voiceMemory, p.voiceLanguage, p.voiceSoundscape, p.voiceMove, p.voiceReward, p.soundscape])
 
         React.useEffect(() => { Object.values(audio.current).forEach((a) => (a.muted = muted)) }, [muted])
 
@@ -3760,7 +3973,7 @@ const __DemoPage = (() => {
                     </div>
                 </section>
 
-                <ClosingCta eyebrow="Coming to iOS & Android" title={<>Be first to experience <span className="esc-gold">Escape</span></>} lede={p.crowdfundHref ? "Join the beta, or back Escape on Indiegogo and get early access as a supporter." : "Join the beta and we'll let you know the moment it opens."} primary={{ label: "Join the beta", href: p.waitlistHref }} secondary={p.crowdfundHref ? { label: "Support on Indiegogo", href: p.crowdfundHref } : undefined} badges />
+                <ClosingCta eyebrow="Coming to iOS & Android" title={<>Be first to experience <span className="esc-gold">Escape</span></>} lede="Join the beta, and come hang out with the team and other testers on Discord." primary={{ label: "Join the beta", href: p.waitlistHref }} secondary={p.discordHref ? { label: "Join the Discord", href: p.discordHref } : undefined} badges />
             </Page>
         )
     }
@@ -4088,46 +4301,52 @@ const __DemoPage = (() => {
         voiceMood: DEMO + "lucille_mood.mp3",
         voiceListen: DEMO + "lucille_listen.mp3",
         voiceMemory: DEMO + "lucille_memory.mp3",
+        voiceLanguage: DEMO + "lucille_language.mp3",
         voiceSoundscape: DEMO + "lucille_forest.mp3",
         voiceMove: DEMO + "lucille_move.mp3",
         voiceReward: DEMO + "lucille_reward.mp3",
         soundscape: DEMO + "soundscape_misty_forest.mp3",
         waitlistHref: ROUTES.beta,
-        crowdfundHref: LINKS.indiegogo,
+        discordHref: LINKS.discord,
     }
     addPropertyControls(DemoPage, {
         voiceMood: { type: ControlType.File, title: "1 · Mood voice", allowedFileTypes: ["mp3", "m4a"] },
         voiceListen: { type: ControlType.File, title: "2 · Lucille voice", allowedFileTypes: ["mp3", "m4a"] },
         voiceMemory: { type: ControlType.File, title: "2 · Memory voice", allowedFileTypes: ["mp3", "m4a"] },
+        voiceLanguage: { type: ControlType.File, title: "2 · Language voice", allowedFileTypes: ["mp3", "m4a"] },
         soundscape: { type: ControlType.File, title: "3 · Soundscape", allowedFileTypes: ["mp3", "m4a"] },
         voiceSoundscape: { type: ControlType.File, title: "3 · Narration", allowedFileTypes: ["mp3", "m4a"] },
         voiceMove: { type: ControlType.File, title: "4 · Coaching voice", allowedFileTypes: ["mp3", "m4a"] },
         voiceReward: { type: ControlType.File, title: "5 · Reward voice", allowedFileTypes: ["mp3", "m4a"] },
         waitlistHref: { type: ControlType.Link, title: "Beta link" },
-        crowdfundHref: { type: ControlType.Link, title: "Indiegogo link" },
+        discordHref: { type: ControlType.Link, title: "Discord link" },
     })
     return { default: DemoPage }
 })()
 
 // ═══════════════ LegalPage ═══════════════
 const __LegalPage = (() => {
-    // Escape — Legal pages (Privacy Policy, Terms of Service, Cookie Policy). Fill width, auto height.
-    // One component, three pages: set "Document" on each page. The text below is a DRAFT written
+    // Escape — Legal pages (Privacy Policy, Consumer Health Data Privacy Policy, Terms of Service, Safety & Crisis
+    // Protocol, Delete your account, Cookie Policy). Fill width, auto height.
+    // One component, six pages: set "Document" on each page. The text below is a DRAFT written
     // from what the app actually does (permissions, processors, purchases). Have counsel review it
     // before publishing, then keep "Last updated" current.
 
 
 
-    type Doc = "privacy" | "terms" | "cookies"
-    interface Props { doc: Doc; lastUpdated: string; company: string; email: string; address: string }
+    type Doc = "privacy" | "health" | "terms" | "safety" | "delete" | "cookies"
+    interface Props { doc: Doc; lastUpdated: string; company: string; email: string; address: string; draft: boolean }
     type Section = { id: string; title: string; body: React.ReactNode }
 
     /**
      */
     function LegalPage(p: Props) {
         const docs: Record<Doc, { title: string; href: string; promise?: string; sections: Section[] }> = {
-            privacy: { title: "Privacy Policy", href: ROUTES.privacy, promise: "We collect only what Escape needs to work, we never sell your data, and you can delete your account and its data from Settings at any time.", sections: privacy(p) },
+            privacy: { title: "Privacy Policy", href: ROUTES.privacy, promise: "We collect only what Escape needs to work, we never sell your data or use it for ads, and you can delete your account and its data from the app at any time.", sections: privacy(p) },
+            health: { title: "Consumer Health Data", href: ROUTES.health, promise: "We collect health data only to provide Escape, with your consent. We never sell it, never use it for ads, and never geofence health locations.", sections: healthData(p) },
             terms: { title: "Terms of Service", href: ROUTES.terms, sections: terms(p) },
+            safety: { title: "Safety & Crisis Protocol", href: ROUTES.safety, promise: "When someone may be at risk, Lucille stops and shows real crisis help. That message is written by our team in advance; it is never generated by AI.", sections: safety(p) },
+            delete: { title: "Delete your account", href: ROUTES.deleteAccount, sections: deleteAccount(p) },
             cookies: { title: "Cookie Policy", href: ROUTES.cookies, sections: cookies(p) },
         }
         const d = docs[p.doc] || docs.privacy
@@ -4148,6 +4367,7 @@ const __LegalPage = (() => {
                         <Eyebrow>Legal</Eyebrow>
                         <h1 className="esc-d esc-h1">{d.title}</h1>
                         <p className="esc-p">Last updated: {p.lastUpdated} · {p.company}</p>
+                        {p.draft && <p className="esc-small lg-draft">Draft for counsel review. Items marked [confirm] still need a final answer before publishing.</p>}
                         <nav className="lg-tabs" aria-label="Legal documents">
                             {(Object.keys(docs) as Doc[]).map((k) => (
                                 <a key={k} href={docs[k].href} aria-current={k === p.doc ? "page" : undefined} className={k === p.doc ? "on" : ""}>{docs[k].title}</a>
@@ -4169,7 +4389,7 @@ const __LegalPage = (() => {
                             {d.promise && (
                                 <Reveal className="esc-glass lg-promise">
                                     <span className="esc-icon"><Icon name="shield" /></span>
-                                    <p className="esc-p" style={{ color: "var(--esc-ink)" }}><strong style={{ fontWeight: 500 }}>Our core privacy promise.</strong> {d.promise}</p>
+                                    <p className="esc-p" style={{ color: "var(--esc-ink)" }}><strong style={{ fontWeight: 500 }}>Our promise.</strong> {d.promise}</p>
                                 </Reveal>
                             )}
                             {d.sections.map((s, i) => (
@@ -4202,63 +4422,69 @@ const __LegalPage = (() => {
 
     function privacy(p: Props): Section[] {
         return [
-            { id: "intro", title: "Introduction", body: <><p>This policy explains how {p.company} ("Escape", "we") handles information when you use the Escape app and this website. Escape is a self-care and wellbeing app; it is not a medical device.</p></> },
-            { id: "collect", title: "What we collect and why", body: <>
-                <p>We collect the minimum needed to run Escape and personalize it for you:</p>
-                {ul([
-                    <><strong>Account:</strong> your name, email and sign-in method (Apple, Google or email), so you can sign in on your devices.</>,
-                    <><strong>What you create:</strong> mood check-ins, journal entries, plans, sessions you complete, and your conversations with Lucille (text, and voice you choose to send). This is what makes Escape personal.</>,
-                    <><strong>Coins and progress:</strong> coins, streaks and Energy Scan results.</>,
-                    <><strong>Device and usage:</strong> app version, crash reports and performance data, and a push-notification token if you allow notifications.</>,
-                    <><strong>Purchases:</strong> your subscription status from the App Store or Google Play (via our subscription provider). We never see your card details.</>,
-                ])}
-                <p>Optional, only if you allow it on your device:</p>
-                {ul([
-                    <><strong>Approximate location</strong> (about 1 km) to tune Soundscapes to your local weather and time of day.</>,
-                    <><strong>Apple Health / Health Connect:</strong> reading heart rate, HRV, sleep and steps to tune sessions, and saving mood check-ins and mindful minutes. Health data is never sold or used for advertising.</>,
-                    <><strong>Camera</strong> for the Mood Scan: the reading is used, not the photo or video.</>,
-                    <><strong>Microphone and speech recognition</strong> when you talk with Lucille or dictate a journal entry.</>,
-                    <><strong>Photos</strong> you choose for your profile or a journal entry.</>,
-                ])}
-            </> },
-            { id: "use", title: "How we use information", body: <>{ul([
-                "To provide Escape: your account, check-ins, sessions, Soundscapes, plans and journal.",
-                "To let Lucille respond to you with context, and to suggest what may help today.",
-                "To award coins, calculate your Energy Scan and send reminders you've chosen.",
-                "To keep Escape secure, fix bugs and improve features (using aggregated or de-identified data where we can).",
-            ])}<p>We do not use your wellbeing content for advertising, and there are no ads in Escape.</p></> },
-            { id: "share", title: "How we share information", body: <><p>We do not sell or rent your personal information. We share it only with service providers who process it for us under contract, such as:</p>{ul([
-                "Google Cloud and Firebase (hosting, database, sign-in, notifications, crash reports and analytics).",
-                "AI model providers that generate Lucille's replies, voice and transcriptions.",
-                "Our subscription provider and the App Store / Google Play for purchases.",
-            ])}<p>We may also disclose information if required by law, or to protect someone's safety.</p></> },
-            { id: "social", title: "Sharing you choose", body: <p>If you share a milestone, a soundscape mix or creator content, it's visible to the people you share it with. You control what you share.</p> },
-            { id: "security", title: "Security and retention", body: <p>Data is encrypted in transit and protected with access controls. We keep your information while your account is active. When you delete your account in Settings, we delete your personal data from our active systems, except where we must keep limited records by law; backups roll off on a regular schedule.</p> },
-            { id: "rights", title: "Your choices and rights", body: <>{ul([
-                "Access, correct or export your data by emailing us.",
-                "Delete your account and its data from Settings in the app, at any time.",
-                "Turn off notifications, location, Health, camera or microphone access in your device settings.",
-                "California residents: you have rights under the CCPA/CPRA, including to know, delete and correct. We do not sell or share personal information for cross-context advertising.",
-                "If you're in the EEA or UK, you have rights under the GDPR, including to object and to complain to your data protection authority.",
-            ])}</> },
-            { id: "dnt", title: "Do Not Track", body: <p>This website doesn't track you across other sites, so it treats every visit the same whether or not your browser sends a Do Not Track or Global Privacy Control signal.</p> },
-            { id: "children", title: "Children", body: <p>Escape isn't directed to children under 13, and we don't knowingly collect their information. If you believe a child has given us information, contact us and we'll delete it.</p> },
-            { id: "changes", title: "Changes and governing law", body: <p>We'll update this page when our practices change and, for significant changes, tell you in the app. This policy is governed by the laws of the United States and the state where {p.company} is organized.</p> },
+            { id: "intro", title: "Who we are", body: <><p>This policy explains how {p.company} ("Escape", "we") handles information when you use the Escape app, Lucille (Escape's AI self-care concierge), Soundscapes, the Innerverse and this website.</p><p>Escape is a self-care and wellbeing app. It is not a medical device and does not provide therapy, diagnosis or treatment.</p><p>If you live in Washington, Nevada or Connecticut, our <a className="esc-link" href={ROUTES.health}>Consumer Health Data Privacy Policy</a> also applies and explains your health-data rights in more detail.</p></> },
+            { id: "collect", title: "What we collect", body: <><p><strong>Information you give us</strong></p>{ul([<><strong>Account:</strong> name, email, sign-in method (Apple, Google or email) and your age band (13–17 or 18+). We do not store your birthday.</>, <><strong>Check-ins:</strong> mood words, sliders and notes. If you connect Apple Health or Health Connect, the heart-rate reading taken at that moment is saved with the check-in.</>, <><strong>Journal:</strong> entries you write or dictate.</>, <><strong>Conversations with Lucille:</strong> messages you type, what you say in voice chat (as a transcript), and short memories Lucille keeps so she can follow up with you.</>, <><strong>Plans and progress:</strong> self-care plans, completed sessions, coins, streaks and Energy Scan results.</>, <><strong>Feedback:</strong> thumbs up or down on Lucille's replies. Written feedback is kept only if you turn on "Help improve Lucille".</>, <><strong>Reports:</strong> if you report one of Lucille's replies, the reply and your reason.</>])}<p><strong>Information from your device, only if you allow it</strong></p>{ul([<><strong>Apple Health / Health Connect:</strong> we read heart rate, heart-rate variability, resting heart rate, sleep, steps and State of Mind to tune sessions, and we save mindful minutes back. Health data is never sold, never used for advertising and never stored in iCloud.</>, <><strong>Camera (Mood Scan):</strong> you place a fingertip over the camera and flash. The phone reads the color change on the device to estimate your pulse. No photo or video is saved or sent; only the pulse number leaves your phone.</>, <><strong>Microphone and speech recognition:</strong> when you talk with Lucille or dictate a journal entry. The recording is sent for transcription and is not stored by Escape.</>, <><strong>Approximate location</strong> (about 1 km) to match Soundscapes to your local weather and time of day.</>, <><strong>Photos</strong> you pick for your profile or a journal entry.</>, <><strong>Notifications:</strong> a push token, if you allow reminders.</>])}<p><strong>Collected automatically:</strong> app version, device type, crash reports, performance data and which screens you use. We do not use advertising IDs, ad networks or cross-app tracking.</p><p><strong>From app stores:</strong> an age-range signal from Apple or Google where the law requires it (for example, Texas). We use it only to apply age protections.</p></> },
+            { id: "use", title: "How we use it", body: <>{ul([<>To run Escape: your account, check-ins, journal, plans, Soundscapes and the Innerverse.</>, <>To let Lucille reply with context and suggest what may help today.</>, <>To award coins, calculate your Energy Scan and send the reminders you choose.</>, <>To keep people safe: to detect when someone may be at risk and show crisis resources (see our <a className="esc-link" href={ROUTES.safety}>Safety & Crisis Protocol</a>).</>, <>To keep Escape secure, fix bugs and improve features, using de-identified or aggregated data where we can.</>, <>To compare versions of Lucille in a small, opt-in experiment (see below).</>])}<p>We do not sell your data, use your wellbeing content for advertising, or show ads in Escape.</p></> },
+            { id: "ai", title: "AI services we use", body: <><p>Lucille is an AI. To answer you, your messages and the context she needs are sent to AI providers that process them for us under contract:</p>{ul([<><strong>OpenAI</strong> writes Lucille's replies and transcribes voice recordings. [confirm: OpenAI zero-data-retention status and retention period]</>, <><strong>Anthropic</strong> writes replies only for adults who join our Lucille experiment. You're asked before you join and can leave any time in Privacy & data. Teens are never included.</>, <><strong>Lucille's voice</strong> is generated on our own Google Cloud servers from a voice actor who consented to its use. Your messages are not used to train that voice.</>])}<p>Our providers may not use your data to train their models for anyone else. [confirm: contract terms for each provider]</p></> },
+            { id: "share", title: "Who we share it with", body: <><p>We share information only with service providers that process it for us under contract, or when the law requires it:</p>{ul([<><strong>Google Cloud and Firebase:</strong> hosting, database, sign-in, notifications, crash reports and analytics.</>, <><strong>OpenAI and Anthropic:</strong> Lucille's replies and transcription, as described above.</>, <><strong>Vagon:</strong> streams the Innerverse to your phone. [confirm: whether Vagon keeps session logs]</>, <><strong>Partner brands:</strong> when you redeem a partner reward, we give you a code. We don't send your personal information to the brand.</>, <><strong>Legal and safety:</strong> if required by law, or to protect someone's life or safety.</>])}</> },
+            { id: "keep", title: "How long we keep it", body: <><p>We keep your information while your account is active. When you delete your account, we delete your personal data from our active systems within 30 days, and from backups as they roll off within [confirm: backup period].</p>{ul([<>Voice recordings: not stored by Escape; transcripts are kept with your conversation.</>, <>Conversations and memories: until you delete them or your account. [confirm: automatic deletion period, if any]</>, <>Safety reports: [confirm: period] so we can review them and meet reporting duties, without your name in any report we publish.</>, <>Crash and performance data: [confirm: period].</>])}</> },
+            { id: "security", title: "Security", body: <><p>Data is encrypted in transit and at rest, access is limited to people who need it, and keys are kept in a secrets manager. No system is perfect; if a breach affects you, we will tell you as the law requires, including within 60 days under the FTC Health Breach Notification Rule.</p></> },
+            { id: "choices", title: "Your choices", body: <>{ul([<><strong>In the app (Profile → Privacy & data):</strong> download your data, delete a type of data (for example, all Lucille memories), withdraw consents, or delete your account.</>, <><strong>On the web:</strong> request deletion at <a className="esc-link" href={ROUTES.deleteAccount}>https://escapeapp.ai/delete-account</a>.</>, <><strong>On your device:</strong> turn off Health, camera, microphone, location or notifications at any time.</>])}</> },
+            { id: "rights", title: "Your rights by state", body: <><p>Depending on where you live, you can ask to know, access, correct, delete or get a copy of your personal information, and to opt out of sale, sharing for targeted advertising and profiling. We don't sell or share data for advertising, so those apply automatically.</p>{ul([<><strong>California (CCPA/CPRA):</strong> you can limit our use of sensitive personal information. We already use it only to provide Escape. We do not discriminate against you for using your rights.</>, <><strong>Washington, Nevada and Connecticut:</strong> see the <a className="esc-link" href={ROUTES.health}>Consumer Health Data Privacy Policy</a>.</>, <><strong>EEA and UK:</strong> you have rights under the GDPR, including to object and to complain to your data protection authority.</>])}<p>To make a request, use Privacy & data in the app or email {p.email}. We'll confirm who you are, answer within 45 days, and tell you if we need more time. If we decline, you can appeal by replying "Appeal" to our answer; we'll respond within 45 days and, if you're still unhappy, you can contact your state attorney general.</p></> },
+            { id: "kids", title: "Children and teens", body: <><p>Escape is for people 13 and older. If we learn someone is under 13, we block the app and delete their account and data.</p><p>For 13- to 17-year-olds we add protections: a reminder every hour that Lucille is an AI, reminders to take a break, no partner rewards, and no AI experiments.</p></> },
+            { id: "dnt", title: "Website and Do Not Track", body: <><p>This website doesn't track you across other sites, uses no advertising cookies, and treats every visit the same whether or not your browser sends Do Not Track or Global Privacy Control.</p></> },
+            { id: "changes", title: "Changes and contact", body: <><p>We'll update this page when our practices change and tell you in the app about significant changes.</p><p>Questions: {p.email}. {p.company} · Attn: Privacy & Legal · [confirm mailing address]. Governing law: [confirm with counsel].</p></> },
+        ]
+    }
+
+    function healthData(p: Props): Section[] {
+        return [
+            { id: "scope", title: "What this covers", body: <><p>This policy describes how Escape collects, uses and shares "consumer health data" as defined by Washington's My Health My Data Act and similar laws in Nevada and Connecticut. It adds to our <a className="esc-link" href={ROUTES.privacy}>Privacy Policy</a>.</p></> },
+            { id: "categories", title: "Health data we collect", body: <>{ul([<>Mood check-ins: mood words, sliders, notes and energy levels.</>, <>Heart rate saved with a check-in, and the pulse estimate from a Mood Scan.</>, <>Data from Apple Health or Health Connect that you allow: heart rate, heart-rate variability, resting heart rate, sleep, steps and State of Mind.</>, <>Journal entries and conversations with Lucille that describe your wellbeing, and memories Lucille keeps from them.</>, <>Wellbeing inferences such as your Energy Scan and suggested self-care plans.</>, <>Safety signals: whether a message showed signs that someone may be at risk.</>])}</> },
+            { id: "sources", title: "Where it comes from", body: <>{ul([<>You, when you check in, write, talk to Lucille or build a plan.</>, <>Your device, when you allow Apple Health, Health Connect or the camera for a Mood Scan.</>, <>Our systems, which create the inferences listed above.</>])}</> },
+            { id: "purposes", title: "Why we use it", body: <>{ul([<>To provide the features you ask for: check-ins, journal, Lucille, plans, Soundscapes and the Energy Scan.</>, <>To show crisis resources when someone may be at risk.</>, <>To keep the service secure and working.</>])}<p>We ask for your consent before collecting health data, and separately before sharing it, except where it's strictly needed to provide the feature you asked for.</p></> },
+            { id: "sharing", title: "Who receives it", body: <>{ul([<><strong>Processors that run Escape for us:</strong> Google Cloud and Firebase (storage), OpenAI (Lucille's replies and transcription), Anthropic (only for adults in our opt-in Lucille experiment).</>, <><strong>Nobody else,</strong> unless the law requires it or someone's life is at risk.</>])}<p>We never sell consumer health data and never use it for advertising. We do not set up geofences around places where people get health care.</p></> },
+            { id: "rights", title: "Your rights", body: <>{ul([<>Confirm whether we collect, share or sell your health data, and see a list of the third parties that received it.</>, <>Get a copy of your health data (Profile → Privacy & data → Download my data).</>, <>Withdraw consent at any time in Privacy & data.</>, <>Delete your health data. We act within 45 days (30 days in Nevada) and pass the request to our processors.</>, <>Appeal a decision by replying "Appeal" to our answer. If you're still unhappy, you can contact the Washington Attorney General at <a className="esc-link" href="https://www.atg.wa.gov/file-complaint" target="_blank" rel="noopener noreferrer">atg.wa.gov</a>.</>])}<p>Use Privacy & data in the app, the <a className="esc-link" href={ROUTES.deleteAccount}>delete-account page</a>, or email {p.email}.</p></> },
+            { id: "contact", title: "Contact", body: <><p>{p.email}. {p.company} · Attn: Privacy & Legal · [confirm mailing address].</p></> },
         ]
     }
 
     function terms(p: Props): Section[] {
         return [
-            { id: "agree", title: "Agreement", body: <p>By using Escape you agree to these terms. If you don't agree, please don't use Escape.</p> },
-            { id: "notmedical", title: "Not medical care", body: <p>Escape and Lucille provide self-care and wellbeing support only. They don't diagnose, treat or replace professional care. If you're in crisis in the US, call or text 988; elsewhere, contact your local emergency number.</p> },
-            { id: "account", title: "Your account", body: <p>You're responsible for your account and for keeping your sign-in secure. You must be at least 13 (or the minimum age in your country) to use Escape.</p> },
-            { id: "subs", title: "Free Preview and subscriptions", body: <p>Escape is free during the Free Preview. When paid plans start, we'll tell you in advance, and nothing is charged unless you choose a plan. Paid Journey Passes are billed through the App Store or Google Play and renew automatically until you cancel in your store account settings, at least 24 hours before renewal. Refunds are handled by the store under its policies.</p> },
-            { id: "coins", title: "Coins and rewards", body: <p>Escape coins are earned through activity in the app. They have no cash value, can't be bought, sold or transferred, and may be adjusted to prevent abuse. Marketplace items and partner rewards are subject to availability.</p> },
-            { id: "content", title: "Your content", body: <p>You own what you create in Escape. You give us the permission needed to store and process it to run the service for you. Content you choose to share publicly must follow our community guidelines.</p> },
-            { id: "ai", title: "AI features", body: <p>Lucille is an AI. Her responses can be wrong or incomplete; use your judgment and don't rely on them for medical, legal or financial decisions.</p> },
-            { id: "acceptable", title: "Acceptable use", body: <p>Don't misuse Escape: no harassment, illegal content, attempts to break security, or scraping. We may suspend accounts that put others at risk.</p> },
-            { id: "liability", title: "Disclaimers and liability", body: <p>Escape is provided "as is". To the extent the law allows, {p.company} isn't liable for indirect or consequential losses, and our total liability is limited to what you paid us in the past 12 months.</p> },
-            { id: "changes", title: "Changes and contact", body: <p>We may update these terms and will tell you in the app about significant changes. Questions: {p.email}.</p> },
+            { id: "agree", title: "Agreement", body: <><p>These terms are an agreement between you and {p.company}. By using Escape you agree to them and to our <a className="esc-link" href={ROUTES.privacy}>Privacy Policy</a>. If you don't agree, please don't use Escape.</p><p>If you use Escape on iOS, Apple's <a className="esc-link" href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer">Standard End User License Agreement</a> also applies. Where it conflicts with these terms, these terms apply between you and us.</p></> },
+            { id: "notcare", title: "Self-care, not medical care", body: <><p>Escape and Lucille offer self-care and wellbeing support. They are not therapy, counseling or medical care, and they don't diagnose or treat any condition. Talk to a doctor or licensed professional about your health.</p><p>If you might be in danger: Call or text <strong>988</strong> (Suicide & Crisis Lifeline, US) · Text <strong>HOME to 741741</strong> (Crisis Text Line) · Call <strong>911</strong> in an emergency · Outside the US: <a className="esc-link" href="https://findahelpline.com" target="_blank" rel="noopener noreferrer">findahelpline.com</a>.</p></> },
+            { id: "lucille", title: "Lucille is an AI", body: <><p>Lucille is software, not a person. Her replies are generated by AI services (OpenAI, and Anthropic for adults in our opt-in experiment) and can be wrong, incomplete or unsuitable. Use your own judgment and don't rely on them for medical, legal, financial or safety decisions.</p><p>If a reply seems wrong or unsafe, tap <strong>Report</strong> on it. We review reports and may change Lucille or remove content.</p></> },
+            { id: "account", title: "Your account and age", body: <><p>You must be at least 13 to use Escape. If you're 13 to 17, you need a parent or guardian's permission, and some features (like partner rewards and AI experiments) aren't available. Keep your sign-in secure; you're responsible for activity on your account.</p></> },
+            { id: "plans", title: "Free Preview and paid plans", body: <><p>Escape is free during the Free Preview. Before paid plans start, we'll tell you in advance; nothing is charged unless you choose a plan. Paid plans are billed by the App Store or Google Play, renew until you cancel in your store account at least 24 hours before renewal, and refunds follow the store's policies.</p></> },
+            { id: "coins", title: "Coins and partner rewards", body: <><p>Coins are earned through activity. They have no cash value and can't be bought, sold or transferred. We may adjust coins to prevent abuse.</p><p>Partner rewards (for example, gift codes from brands) are limited, subject to availability and to the partner's own terms, and not available to users under 18. Redeeming a reward doesn't require turning on any permission.</p></> },
+            { id: "content", title: "Your content", body: <><p>You own what you create in Escape. You give us the permission needed to store and process it to run Escape for you, as described in the Privacy Policy. You can delete it at any time.</p></> },
+            { id: "use", title: "Acceptable use", body: <><p>Don't misuse Escape: no harassment, illegal content, attempts to get Lucille to produce harmful content, attempts to break security, scraping, or reselling access. We may limit or suspend accounts that put others at risk.</p></> },
+            { id: "ip", title: "Our content", body: <><p>Escape's app, Soundscapes, Lucille's voice and character, the Innerverse and our brand belong to us or our licensors. You may use them only inside Escape for your personal use.</p></> },
+            { id: "liability", title: "Disclaimers and liability", body: <><p>Escape is provided "as is" and "as available". To the extent the law allows, {p.company} isn't liable for indirect or consequential losses, and our total liability is limited to the greater of what you paid us in the past 12 months or $50. Some places don't allow these limits, so they may not apply to you.</p></> },
+            { id: "disputes", title: "Disputes", body: <><p>[confirm with counsel: governing law, venue, informal-resolution period, arbitration or small-claims terms, and class-action waiver, if any].</p></> },
+            { id: "changes", title: "Changes, ending and contact", body: <><p>We may update these terms and will tell you in the app about significant changes. You can stop using Escape and delete your account at any time; we may end access if you break these terms.</p><p>Questions: support@escapeapp.ai. {p.company} · Attn: Privacy & Legal · [confirm mailing address].</p></> },
+        ]
+    }
+
+    function safety(p: Props): Section[] {
+        return [
+            { id: "now", title: "If you need help now", body: <><p>Call or text <strong>988</strong> (Suicide & Crisis Lifeline, US) · Text <strong>HOME to 741741</strong> (Crisis Text Line) · Call <strong>911</strong> in an emergency · Outside the US: <a className="esc-link" href="https://findahelpline.com" target="_blank" rel="noopener noreferrer">findahelpline.com</a>.</p><p>Lucille is an AI. She can't call for help, and she isn't a crisis service.</p></> },
+            { id: "detect", title: "How we notice someone may be at risk", body: <>{ul([<><strong>On your phone:</strong> before a message leaves your device, Escape checks it for signs of suicidal thoughts, self-harm or wanting to die, including common ways people say it.</>, <><strong>On our servers:</strong> every message to Lucille, typed or spoken, is checked again before any AI sees it, for signs of suicide, self-harm and threats of violence. [confirm: add eating-disorder phrases before Jan 1, 2027 (Washington HB 2225)]</>, <>The checks are tested against a list of real-world example phrases and updated when we find gaps. [confirm: name the evidence-based screening approach counsel and clinicians approve]</>])}</> },
+            { id: "respond", title: "What happens next", body: <>{ul([<>Lucille does not reply with AI. Instead, Escape shows a fixed message written by our team, with 988, the Crisis Text Line, 911 and findahelpline.com, and one-tap buttons to call or text.</>, <>The "I'm really struggling" button on the check-in screen opens the same help at any time.</>, <>We record that crisis resources were shown (not the words of the conversation in any report) so we can count referrals and improve.</>])}</> },
+            { id: "disclose", title: "Reminders that Lucille is an AI", body: <>{ul([<>At the start of every conversation, typed or spoken.</>, <>Every 3 hours (or about every 12 messages) during a conversation.</>, <>For 13- to 17-year-olds: every hour (or every 5 messages), plus reminders to take a break.</>, <>Lucille never claims to be human, to have feelings, or to be a therapist.</>])}</> },
+            { id: "teens", title: "Extra protections for teens", body: <>{ul([<>Hourly AI reminders and break reminders.</>, <>No romantic or sexual content; Lucille is instructed to refuse it for everyone.</>, <>No partner rewards and no AI experiments.</>, <>[confirm: teen memory and notification defaults and parental controls before July 1, 2027 (California SB 1119)]</>])}</> },
+            { id: "report", title: "Reporting a reply", body: <><p>Tap <strong>Report</strong> under any reply from Lucille, or email support@escapeapp.ai with the date and time. Our team reviews safety reports within [confirm: hours/days], and we use them to fix Lucille and our safety checks.</p></> },
+            { id: "annual", title: "Yearly reporting", body: <><p>Starting July 1, 2027, we report each year to the California Office of Suicide Prevention, and where required to other states, how many times we showed crisis resources and the protocols on this page. Reports contain no personal information.</p></> },
+            { id: "contact", title: "Contact", body: <><p>Safety questions: support@escapeapp.ai. {p.company} · Attn: Privacy & Legal · [confirm mailing address].</p></> },
+        ]
+    }
+
+    function deleteAccount(p: Props): Section[] {
+        return [
+            { id: "app", title: "Delete in the app", body: <>{ul([<>Open Escape and go to <strong>Profile → Privacy & data</strong>.</>, <>Tap <strong>Delete my account</strong> and confirm.</>, <>Your account is deleted right away and you're signed out on this device.</>])}<p>To remove just part of your data (for example, all Lucille memories or journal entries), use the per-type delete options on the same screen.</p></> },
+            { id: "web", title: "Request deletion without the app", body: <><p>Email <strong>{p.email}</strong> from the address on your account, with the subject "Delete my account". We'll confirm it's you and delete the account within 30 days, then email you when it's done.</p></> },
+            { id: "what", title: "What gets deleted", body: <>{ul([<>Your account, profile and age band.</>, <>Check-ins, journal entries, plans, coins and progress.</>, <>Conversations with Lucille, her memories, and your feedback.</>, <>Health data saved by Escape. (Data in Apple Health or Health Connect stays there; manage it in those apps.)</>, <>We ask our processors (Google Cloud, OpenAI, Anthropic) to delete what they hold for you.</>])}</> },
+            { id: "kept", title: "What we may keep", body: <>{ul([<>Records we must keep by law, such as safety and fraud-prevention records, for [confirm: period].</>, <>Backups, which roll off within [confirm: backup period].</>, <>De-identified counts (for example, how many people used a feature) that can't be linked back to you.</>])}</> },
         ]
     }
 
@@ -4266,7 +4492,7 @@ const __LegalPage = (() => {
         return [
             { id: "what", title: "What this covers", body: <p>This explains what this website stores in your browser. The Escape app is covered by the Privacy Policy.</p> },
             { id: "essential", title: "Preferences we store", body: <p>When you choose a mood on the orb gate, or switch between day and night, we save that choice in your browser's local storage (key <code>escape.site.v1</code>) so the site remembers it. It never leaves your device and isn't used to identify you.</p> },
-            { id: "analytics", title: "Analytics", body: <p>We use privacy-friendly, aggregate page analytics provided by our website host to understand which pages are useful. We don't use advertising cookies or cross-site trackers.</p> },
+            { id: "analytics", title: "Analytics", body: <><p>We use privacy-friendly, aggregate page analytics provided by our website host to understand which pages are useful.</p><p><strong>Meta Pixel, only if you say yes.</strong> When you accept it in the bar at the bottom of the site, we load Meta's pixel so we can see which pages and posts bring people to the beta (page views, a beta application sent, a click to our Discord). It sets Meta cookies and shares your visit with Meta under <a className="esc-link" href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noopener noreferrer">Meta's privacy policy</a>. Nothing from the Escape app (your moods, journal or chats) is ever sent to it. Choose "No thanks" and it never loads; clear site data to change your answer (key <code>escape.consent.v1</code>).</p></> },
             { id: "embeds", title: "Fonts and media", body: <p>Fonts, the mood orb videos and other media load from Google services. Those requests include standard technical information such as your IP address.</p> },
             { id: "control", title: "Your control", body: <p>You can clear site data in your browser settings at any time, which resets your mood and tone choice. Questions: {p.email}.</p> },
         ]
@@ -4293,23 +4519,26 @@ const __LegalPage = (() => {
     .lg-text ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
     .lg-text strong{color:var(--esc-ink);font-weight:500}
     .lg-text code{font-size:.9em;padding:2px 6px;border-radius:6px;background:var(--esc-glass1)}
+    .lg-draft{display:inline-block;margin:0;padding:6px 12px;border-radius:10px;background:var(--esc-glass1);border:1px solid var(--esc-border);color:var(--esc-muted)}
     .lg-contact{border-radius:28px;padding:clamp(22px,3cqi,32px);display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
     @container (max-width:900px){.lg-body{grid-template-columns:minmax(0,1fr)}.lg-toc{position:static}}
     `
 
     LegalPage.defaultProps = {
         doc: "privacy",
-        lastUpdated: "October 25, 2026",
+        lastUpdated: "October 27, 2026",
         company: "Escape Enterprises LLC",
         email: "privacy@escapeapp.ai",
-        address: "Escape Enterprises LLC · Attn: Privacy & Legal",
+        address: "Escape Enterprises LLC · Attn: Privacy & Legal · [confirm mailing address]",
+        draft: true,
     }
     addPropertyControls(LegalPage, {
-        doc: { type: ControlType.Enum, title: "Document", options: ["privacy", "terms", "cookies"], optionTitles: ["Privacy Policy", "Terms of Service", "Cookie Policy"] },
+        doc: { type: ControlType.Enum, title: "Document", options: ["privacy", "health", "terms", "safety", "delete", "cookies"], optionTitles: ["Privacy Policy", "Consumer Health Data", "Terms of Service", "Safety & Crisis Protocol", "Delete your account", "Cookie Policy"] },
         lastUpdated: { type: ControlType.String, title: "Last updated" },
         company: { type: ControlType.String, title: "Company" },
         email: { type: ControlType.String, title: "Email" },
         address: { type: ControlType.String, title: "Mailing address", displayTextArea: true },
+        draft: { type: ControlType.Boolean, title: "Draft banner", defaultValue: true },
     })
     return { default: LegalPage }
 })()
@@ -4319,7 +4548,7 @@ const PathGate = __PathGate.default
 const SiteNav = __SiteNav.default
 const SiteFooter = __SiteFooter.default
 
-type PageKey = "gate" | "home" | "lucille" | "marketplace" | "pricing" | "innerverse" | "beta" | "demo" | "privacy" | "terms" | "cookies"
+type PageKey = "gate" | "home" | "lucille" | "marketplace" | "pricing" | "innerverse" | "beta" | "demo" | "privacy" | "health" | "terms" | "safety" | "deleteAccount" | "cookies"
 const SITE_PAGES: Record<string, { key: PageKey; body: any; nav: string; props?: any; title: string }> = {
     "/home": { key: "home", body: __HomePage.default, nav: "home", title: "Escape · Your Everyday Escape" },
     "/lucille-ai": { key: "lucille", body: __LucillePage.default, nav: "lucille", title: "Lucille AI · Escape" },
@@ -4331,8 +4560,11 @@ const SITE_PAGES: Record<string, { key: PageKey; body: any; nav: string; props?:
     "/privacy-policy": { key: "privacy", body: __LegalPage.default, nav: "legal", props: { doc: "privacy" }, title: "Privacy Policy · Escape" },
     "/terms": { key: "terms", body: __LegalPage.default, nav: "legal", props: { doc: "terms" }, title: "Terms of Service · Escape" },
     "/cookie-policy": { key: "cookies", body: __LegalPage.default, nav: "legal", props: { doc: "cookies" }, title: "Cookie Policy · Escape" },
+    "/consumer-health-data": { key: "health", body: __LegalPage.default, nav: "legal", props: { doc: "health" }, title: "Consumer Health Data Privacy Policy · Escape" },
+    "/safety": { key: "safety", body: __LegalPage.default, nav: "legal", props: { doc: "safety" }, title: "Safety & Crisis Protocol · Escape" },
+    "/delete-account": { key: "deleteAccount", body: __LegalPage.default, nav: "legal", props: { doc: "delete" }, title: "Delete your account · Escape" },
 }
-const PATH_OF: Record<PageKey, string> = { gate: "/", home: "/home", lucille: "/lucille-ai", marketplace: "/marketplace", pricing: "/pricing", innerverse: "/innerverse", beta: "/app-testing", demo: "/app-demo", privacy: "/privacy-policy", terms: "/terms", cookies: "/cookie-policy" }
+const PATH_OF: Record<PageKey, string> = { gate: "/", home: "/home", lucille: "/lucille-ai", marketplace: "/marketplace", pricing: "/pricing", innerverse: "/innerverse", beta: "/app-testing", demo: "/app-demo", privacy: "/privacy-policy", health: "/consumer-health-data", terms: "/terms", safety: "/safety", deleteAccount: "/delete-account", cookies: "/cookie-policy" }
 const defaults = (C: any) => (C && C.defaultProps) || {}
 
 function readRoute(fallback: string) {
@@ -4433,8 +4665,8 @@ addPropertyControls(EscapeSite, {
     startPage: {
         type: ControlType.Enum, title: "Show page", defaultValue: "home",
         description: "The page shown on the canvas, and the first page when the orb gate is off.",
-        options: ["gate", "home", "lucille", "marketplace", "pricing", "innerverse", "beta", "demo", "privacy", "terms", "cookies"],
-        optionTitles: ["Orb gate", "Home", "Lucille AI", "Marketplace", "Pricing", "Innerverse", "App testing (beta)", "App demo", "Privacy", "Terms", "Cookies"],
+        options: ["gate", "home", "lucille", "marketplace", "pricing", "innerverse", "beta", "demo", "privacy", "health", "terms", "safety", "deleteAccount", "cookies"],
+        optionTitles: ["Orb gate", "Home", "Lucille AI", "Marketplace", "Pricing", "Innerverse", "App testing (beta)", "App demo", "Privacy", "Health data", "Terms", "Safety", "Delete account", "Cookies"],
     },
     pageTitles: { type: ControlType.Boolean, title: "Tab titles", defaultValue: true, enabledTitle: "Per page", disabledTitle: "Framer's" },
 })

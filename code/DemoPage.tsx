@@ -26,7 +26,7 @@ interface Props {
     discordHref: string
 }
 
-const SOUND_KEYS = { mood: "voiceMood", listen: "voiceListen", memory: "voiceMemory", forest: "voiceSoundscape", move: "voiceMove", reward: "voiceReward", music: "soundscape" } as const
+const SOUND_KEYS = { mood: "voiceMood", listen: "voiceListen", memory: "voiceMemory", lang: "voiceLanguage", forest: "voiceSoundscape", move: "voiceMove", reward: "voiceReward", music: "soundscape" } as const
 type Cue = { at: number; sound: keyof typeof SOUND_KEYS } | { at: number; chime: "tick" | "coin" | "done" }
 interface Chapter { id: string; n: number; title: string; body: string; icon: IconName; dur: number; cues: Cue[]; captions: { at: number; to: number; text: string }[] }
 
@@ -38,10 +38,10 @@ const CHAPTERS: Chapter[] = [
         captions: [{ at: 7300, to: 9800, text: "Here's what I noticed…" }, { at: 9800, to: 17200, text: "Because you're feeling restless, a one-minute reset gives that energy somewhere slow to go." }],
     },
     {
-        id: "lucille", n: 2, title: "Lucille", icon: "chat", dur: 16000,
+        id: "lucille", n: 2, title: "Lucille", icon: "chat", dur: 20000,
         body: "She picks up from your mood reading, remembers past sessions and speaks over 120 languages.",
-        cues: [{ at: 2900, sound: "listen" }, { at: 6600, sound: "memory" }],
-        captions: [{ at: 2900, to: 5600, text: "I'm here. Tell me a little more about that." }, { at: 6600, to: 8500, text: "Continue where you left off." }],
+        cues: [{ at: 2900, sound: "listen" }, { at: 6600, sound: "memory" }, { at: 11800, sound: "lang" }],
+        captions: [{ at: 2900, to: 5600, text: "I'm here. Tell me a little more about that." }, { at: 6600, to: 10800, text: "Last week you said mornings were the hardest. How did this one go?" }, { at: 11800, to: 14600, text: "Y si prefieres, podemos hablar en español." }, { at: 14600, to: 18800, text: "Lucille speaks over 120 languages. Switch any time." }],
     },
     {
         id: "sound", n: 3, title: "Soundscapes", icon: "wave", dur: 24000,
@@ -114,7 +114,7 @@ export default function DemoPage(p: Props) {
         }
         audio.current = map
         return () => Object.values(map).forEach((a) => { a.pause(); a.removeAttribute("src"); a.load() })
-    }, [p.voiceMood, p.voiceListen, p.voiceMemory, p.voiceSoundscape, p.voiceMove, p.voiceReward, p.soundscape])
+    }, [p.voiceMood, p.voiceListen, p.voiceMemory, p.voiceLanguage, p.voiceSoundscape, p.voiceMove, p.voiceReward, p.soundscape])
 
     React.useEffect(() => { Object.values(audio.current).forEach((a) => (a.muted = muted)) }, [muted])
 
@@ -584,6 +584,7 @@ DemoPage.defaultProps = {
     voiceMood: DEMO + "lucille_mood.mp3",
     voiceListen: DEMO + "lucille_listen.mp3",
     voiceMemory: DEMO + "lucille_memory.mp3",
+    voiceLanguage: DEMO + "lucille_language.mp3",
     voiceSoundscape: DEMO + "lucille_forest.mp3",
     voiceMove: DEMO + "lucille_move.mp3",
     voiceReward: DEMO + "lucille_reward.mp3",
@@ -595,6 +596,7 @@ addPropertyControls(DemoPage, {
     voiceMood: { type: ControlType.File, title: "1 · Mood voice", allowedFileTypes: ["mp3", "m4a"] },
     voiceListen: { type: ControlType.File, title: "2 · Lucille voice", allowedFileTypes: ["mp3", "m4a"] },
     voiceMemory: { type: ControlType.File, title: "2 · Memory voice", allowedFileTypes: ["mp3", "m4a"] },
+    voiceLanguage: { type: ControlType.File, title: "2 · Language voice", allowedFileTypes: ["mp3", "m4a"] },
     soundscape: { type: ControlType.File, title: "3 · Soundscape", allowedFileTypes: ["mp3", "m4a"] },
     voiceSoundscape: { type: ControlType.File, title: "3 · Narration", allowedFileTypes: ["mp3", "m4a"] },
     voiceMove: { type: ControlType.File, title: "4 · Coaching voice", allowedFileTypes: ["mp3", "m4a"] },

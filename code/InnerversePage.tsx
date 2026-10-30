@@ -4,7 +4,7 @@
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
 import { motion, useReducedMotion } from "framer-motion"
-import { Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, Faq, ClosingCta, ROUTES, ease } from "./EscapeKit.tsx"
+import { Page, Backdrop, Reveal, Eyebrow, Button, SectionHead, Card, Feature, Orb, Icon, Faq, ClosingCta, ROUTES, MEDIA_BASE, ease } from "./EscapeKit.tsx"
 
 const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
 
@@ -70,7 +70,7 @@ export default function InnerversePage(p: Props) {
             <section className="esc-sec">
                 <Backdrop intensity={0.55} />
                 <div className="esc-wrap">
-                    <SectionHead center eyebrow="Six worlds · screenshots" title="See the worlds" lede="A look at each world in the Innerverse. Each one supports a different part of your wellbeing." />
+                    <SectionHead center eyebrow="Six worlds · screenshots" title="See the worlds" lede="Captures from the build in progress. Each world supports a different part of your wellbeing, and each one has its own mini games." />
                     <div className="esc-grid g3">
                         {REALMS.map((r, i) => {
                             const shot = src((p as any)[`world${i + 1}`])
@@ -280,7 +280,13 @@ const IV_CSS = `
 @container (max-width:900px){.iv-avatar{grid-template-columns:minmax(0,1fr)}}
 `
 
-InnerversePage.defaultProps = { waitlistHref: ROUTES.beta, santoriniImage: "", costaRicaImage: "", world1: "", world2: "", world3: "", world4: "", world5: "", world6: "" }
+InnerversePage.defaultProps = {
+    waitlistHref: ROUTES.beta, santoriniImage: "", costaRicaImage: "",
+    // Captures from the Unreal build (Oct 29): forest, temple and cavern. Replace from Framer any time.
+    world1: MEDIA_BASE + "innerverse/world_forest.jpg", world2: "", world3: "",
+    world4: MEDIA_BASE + "innerverse/world_temple.jpg",
+    world5: MEDIA_BASE + "innerverse/world_cavern.jpg", world6: "",
+}
 addPropertyControls(InnerversePage, {
     waitlistHref: { type: ControlType.Link, title: "Waitlist link" },
     santoriniImage: { type: ControlType.Image, title: "Santorini image" },

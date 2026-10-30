@@ -1,7 +1,7 @@
 // Escape — site footer. Fill width, auto height, at the bottom of every page.
 import * as React from "react"
 import { addPropertyControls, ControlType } from "framer"
-import { Page, Button, StoreBadges, ROUTES, DISCLAIMER, Backdrop, LINKS } from "./EscapeKit.tsx"
+import { Page, Button, StoreBadges, ROUTES, DISCLAIMER, Backdrop, LINKS, track } from "./EscapeKit.tsx"
 
 interface Props {
     tagline: string
@@ -26,7 +26,7 @@ interface Props {
 export default function SiteFooter(p: Props) {
     const cols = [
         { title: "Product", links: [["Lucille AI", ROUTES.lucille], ["Pricing", ROUTES.pricing], ["App demo", ROUTES.demo], ["Innerverse · soon", ROUTES.innerverse], ["Discord", LINKS.discord]] },
-        { title: "Rewards", links: [["Marketplace", ROUTES.marketplace], ["Influencer program", LINKS.influencers], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
+        { title: "Rewards", links: [["Marketplace", ROUTES.marketplace], ["Influencer program", LINKS.influencers], ["Back us on Indiegogo", LINKS.indiegogo], ["Beta Discord", LINKS.discord], ["App testing", ROUTES.beta]] },
         { title: "Company", links: [["Privacy Policy", ROUTES.privacy], ["Consumer Health Data", ROUTES.health], ["Terms of Service", ROUTES.terms], ["Safety", ROUTES.safety], ["Cookie Policy", ROUTES.cookies], ["Contact", `mailto:${p.contactEmail}`]] },
     ]
     return (
@@ -49,7 +49,7 @@ export default function SiteFooter(p: Props) {
                     {cols.map((c) => (
                         <nav key={c.title} aria-label={c.title} className="foot-col">
                             <h2 className="esc-over" style={{ margin: "0 0 14px" }}>{c.title}</h2>
-                            <ul>{c.links.map(([l, h]) => { const ext = /^https?:/.test(h); return <li key={l}><a href={h} target={ext ? "_blank" : undefined} rel={ext ? "noopener noreferrer" : undefined}>{l}{ext && <span className="esc-sr"> (opens in a new tab)</span>}</a></li> })}</ul>
+                            <ul>{c.links.map(([l, h]) => { const ext = /^https?:/.test(h); return <li key={l}><a href={h} target={ext ? "_blank" : undefined} rel={ext ? "noopener noreferrer" : undefined} onClick={h === LINKS.indiegogo ? () => track("IndiegogoClick", { placement: "footer" }) : h === LINKS.discord ? () => track("Contact", { content_name: "discord", placement: "footer" }) : undefined}>{l}{ext && <span className="esc-sr"> (opens in a new tab)</span>}</a></li> })}</ul>
                         </nav>
                     ))}
                     <div className="esc-glass foot-access">

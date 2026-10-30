@@ -14,6 +14,7 @@ interface Props {
     testLength: string
     reviewTime: string
     discordUrl: string
+    indiegogoUrl: string
     mazeUrl: string
     fallbackFormUrl: string
     privacyHref: string
@@ -40,6 +41,7 @@ export default function BetaPage(p: Props) {
                         <p className="esc-lede">Help shape a calmer kind of self-care app. Get Lucille early, tell us what works, and get a founding tester badge plus your first year of the Journey Pass free after launch.</p>
                         <div className="esc-row" style={{ gap: 12 }}>
                             <Button onClick={toApply} arrow>Apply in 2 minutes</Button>
+                            <Button href={p.indiegogoUrl} variant="ghost" newTab onClick={() => track("IndiegogoClick", { placement: "beta_hero" })}>Back us on Indiegogo</Button>
                             <Button href={p.discordUrl} variant="ghost" newTab onClick={() => track("Contact", { content_name: "discord", placement: "beta_hero" })}>Join the Discord</Button>
                         </div>
                         <ul className="be-trust">
@@ -146,6 +148,7 @@ export default function BetaPage(p: Props) {
                         <div className="esc-row" style={{ gap: 10 }}>
                             <Button href={p.discordUrl} newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_card" })}>Join the Discord</Button>
                             <Button href={p.mazeUrl} variant="ghost" newTab>Try a Maze study</Button>
+                            <Button href={p.indiegogoUrl} variant="ghost" newTab onClick={() => track("IndiegogoClick", { placement: "beta_card" })}>Back us on Indiegogo</Button>
                         </div>
                     </Reveal>
                 </div>
@@ -436,6 +439,7 @@ BetaPage.defaultProps = {
     testLength: "4 weeks",
     reviewTime: "48 hours",
     discordUrl: LINKS.discord,
+    indiegogoUrl: LINKS.indiegogo,
     mazeUrl: LINKS.maze,
     fallbackFormUrl: LINKS.betaForm,
     privacyHref: ROUTES.privacy,
@@ -444,6 +448,7 @@ addPropertyControls(BetaPage, {
     testLength: { type: ControlType.String, title: "Test length" },
     reviewTime: { type: ControlType.String, title: "Review time" },
     discordUrl: { type: ControlType.Link, title: "Discord" },
+    indiegogoUrl: { type: ControlType.Link, title: "Indiegogo link" },
     mazeUrl: { type: ControlType.Link, title: "Maze" },
     fallbackFormUrl: { type: ControlType.Link, title: "Backup form" },
     privacyHref: { type: ControlType.Link, title: "Privacy link" },
