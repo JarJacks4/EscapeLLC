@@ -58,6 +58,16 @@ Pages are hash links (`/#/home`, `/#/lucille-ai`, `/#/app-testing` …). On the 
 6. **Legal pages.** Use the same `LegalPage` on all three and set **Document** on each.
 7. **Publish**, then open the site on your phone and walk through the gate once.
 
+## One-file install: `EscapeSite.loader.tsx` + the hosted bundle
+
+Framer would not save the full site as one code file (350 KB; its save call fails with "No save id found"). The working setup is a 3.6 KB loader in Framer and the site itself served from the media bucket, exactly like the orb loops and the demo audio:
+
+1. `media/site/escape-site.js` goes up with the rest of `media/` (step 1 above, the one `gcloud storage cp` line). The loader expects it at `web/site/escape-site.js` in the bucket.
+2. In Framer, one code file named `EscapeSite` with the contents of `EscapeSite.loader.tsx`. Drop the component on every page (Width Fill, Height Fit; 100vh on `/`), set **Show page**, publish.
+3. To change the site later: edit `code/*.tsx`, rebuild `escape-site.js`, re-upload it. The Framer file never changes. The loader adds an hourly cache-busting query so a re-upload shows within the hour (or bump the Bundle URL in the panel to see it at once).
+
+`EscapeSite.tsx` (the full single file) and `EscapeSite.compact.tsx` are kept for reference only.
+
 ## Round 2 (Oct 29): Ben's and Noah's notes, where each one lives
 
 - **Meta Pixel (Noah).** Do **not** paste the `<head>` snippet into Framer's Site Settings. The same pixel (`1685481716363748`) is loaded by `EscapeKit` after the visitor accepts the consent bar, which is what the Cookie Policy promises; pasting it in the head as well would double-count PageViews and fire before consent. Events already wired: `PageView` (on consent), `Lead` when the beta form is submitted, `Contact` on every Discord button, `IndiegogoClick` (custom) on every Indiegogo button (home hero, beta hero, beta card, footer). They show up in Events Manager under those names.
