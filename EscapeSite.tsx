@@ -4543,6 +4543,136 @@ const __LegalPage = (() => {
     return { default: LegalPage }
 })()
 
+// ═══════════════ IntroSplash: the ESCAPE wordmark reveal before the orb gate ═══════════════
+// Plays once per browser session when someone lands on the gate (never on the canvas, never on
+// deep links like /#/pricing). Letters rise out of a soft blur one by one, a band of light passes
+// across the wordmark, the tagline settles in, then the whole intro dissolves into the gate.
+// Tap, click or any key skips it. Reduce Motion: the wordmark simply fades in and out.
+const INTRO_LETTERS = ["M59.30 185.19C59.30 185.19 59.30 182.37 59.30 182.37C65.94 180.16 67.35 174.12 67.35 159.63C67.35 159.63 67.35 69.90 67.35 69.90C67.35 55.41 65.94 49.38 59.30 47.16C59.30 47.16 59.30 44.34 59.30 44.34C59.30 44.34 155.87 44.34 155.87 44.34C155.87 44.34 158.08 72.71 158.08 72.71C158.08 72.71 155.46 73.31 155.46 73.31C147.42 53.60 134.74 47.56 112.21 47.56C112.21 47.56 88.67 47.56 88.67 47.56C88.67 47.56 88.67 107.92 88.67 107.92C88.67 107.92 107.98 107.92 107.98 107.92C132.52 107.92 139.57 103.09 142.78 92.62C142.78 92.62 145.60 92.62 145.60 92.62C145.60 92.62 145.60 126.43 145.60 126.43C145.60 126.43 142.78 126.43 142.78 126.43C139.56 115.97 132.52 111.14 107.98 111.14C107.98 111.14 88.67 111.14 88.67 111.14C88.67 111.14 88.67 171.89 88.67 171.89C88.67 178.33 92.29 181.95 98.73 181.95C98.73 181.95 118.04 181.95 118.04 181.95C138.36 181.95 152.24 175.91 159.88 155.40C159.88 155.40 162.50 155.80 162.50 155.80C162.50 155.80 161.09 185.18 161.09 185.18C161.09 185.18 59.30 185.18 59.30 185.18C59.30 185.18 59.30 185.19 59.30 185.19Z", "M177.40 172.92C177.40 172.92 176.59 142.74 176.59 142.74C176.59 142.74 179.21 142.34 179.21 142.34C187.66 165.28 205.56 182.98 232.32 182.98C246.20 182.98 259.08 174.13 259.08 157.63C259.08 137.91 233.13 128.66 217.03 122.21C196.31 113.56 179.00 106.72 179.00 83.38C179.00 58.43 199.12 42.94 230.71 42.94C245.60 42.94 258.87 46.15 269.34 51.39C269.34 51.39 270.14 77.54 270.14 77.54C270.14 77.54 267.93 78.35 267.93 78.35C259.68 57.63 242.58 46.36 223.07 46.36C206.98 46.36 194.30 55.82 194.30 71.71C194.30 89.62 214.62 96.86 230.72 103.29C251.24 111.15 275.58 120.20 275.58 144.34C275.58 171.90 250.23 187.19 227.09 187.19C206.37 187.19 187.66 180.55 177.39 172.91C177.39 172.91 177.40 172.92 177.40 172.92Z", "M291.68 117.18C291.68 76.55 323.87 42.95 373.16 42.95C388.05 42.95 408.77 45.77 419.23 52.80C419.23 52.80 420.03 79.36 420.03 79.36C420.03 79.36 417.62 79.96 417.62 79.96C409.37 59.24 388.65 46.77 367.92 46.77C335.73 46.77 313.00 68.09 313.00 108.13C313.00 148.17 335.94 182.97 375.17 182.97C397.71 182.97 413.20 169.28 420.44 148.36C420.44 148.36 423.05 148.76 423.05 148.76C423.05 148.76 419.83 177.53 419.83 177.53C409.17 182.36 393.88 187.18 369.33 187.18C321.25 187.18 291.67 162.24 291.67 117.17C291.67 117.17 291.68 117.18 291.68 117.18Z", "M425.67 182.37C431.70 180.16 437.14 174.92 442.57 161.44C442.57 161.44 480.19 68.10 480.19 68.10C481.80 64.07 481.60 60.86 479.79 57.23C479.79 57.23 477.18 51.60 477.18 51.60C477.18 51.60 496.89 42.75 496.89 42.75C496.89 42.75 546.79 161.66 546.79 161.66C552.42 174.93 557.65 180.17 562.28 182.38C562.28 182.38 562.28 185.20 562.28 185.20C562.28 185.20 525.66 185.20 525.66 185.20C525.66 185.20 525.66 182.38 525.66 182.38C532.30 180.17 529.48 174.93 523.85 161.66C523.85 161.66 511.78 132.69 511.78 132.69C511.78 132.69 458.06 132.69 458.06 132.69C458.06 132.69 446.39 161.46 446.39 161.46C440.96 174.94 442.17 180.78 449.00 182.39C449.00 182.39 449.00 185.21 449.00 185.21C449.00 185.21 425.66 185.21 425.66 185.21C425.66 185.21 425.66 182.39 425.66 182.39C425.66 182.39 425.67 182.37 425.67 182.37ZM510.37 129.46C510.37 129.46 484.42 67.29 484.42 67.29C484.42 67.29 459.27 129.46 459.27 129.46C459.27 129.46 510.37 129.46 510.37 129.46C510.37 129.46 510.37 129.46 510.37 129.46Z", "M568.72 182.37C575.36 180.16 576.77 174.12 576.77 159.63C576.77 159.63 576.77 69.90 576.77 69.90C576.77 55.41 575.36 49.38 568.72 47.16C568.72 47.16 568.72 44.34 568.72 44.34C568.72 44.34 610.97 44.34 610.97 44.34C656.84 44.34 667.30 67.08 667.30 83.37C667.30 108.52 649.19 129.84 607.95 129.84C607.95 129.84 598.09 129.84 598.09 129.84C598.09 129.84 598.09 159.61 598.09 159.61C598.09 174.10 599.50 180.13 606.13 182.35C606.13 182.35 606.13 185.17 606.13 185.17C606.13 185.17 568.71 185.17 568.71 185.17C568.71 185.17 568.71 182.35 568.71 182.35C568.71 182.35 568.72 182.37 568.72 182.37ZM644.57 88.61C644.57 71.31 636.12 47.57 604.33 47.57C602.33 47.57 599.50 47.77 598.09 47.97C598.09 47.97 598.09 126.63 598.09 126.63C598.09 126.63 606.94 126.63 606.94 126.63C633.30 126.63 644.56 111.34 644.56 88.60C644.56 88.60 644.57 88.61 644.57 88.61Z", "M679.38 185.19C679.38 185.19 679.38 182.37 679.38 182.37C686.02 180.16 687.43 174.12 687.43 159.63C687.43 159.63 687.43 69.90 687.43 69.90C687.43 55.41 686.02 49.38 679.38 47.16C679.38 47.16 679.38 44.34 679.38 44.34C679.38 44.34 775.95 44.34 775.95 44.34C775.95 44.34 778.16 72.71 778.16 72.71C778.16 72.71 775.54 73.31 775.54 73.31C767.50 53.60 754.82 47.56 732.29 47.56C732.29 47.56 708.75 47.56 708.75 47.56C708.75 47.56 708.75 107.92 708.75 107.92C708.75 107.92 728.06 107.92 728.06 107.92C752.60 107.92 759.65 103.09 762.86 92.62C762.86 92.62 765.68 92.62 765.68 92.62C765.68 92.62 765.68 126.43 765.68 126.43C765.68 126.43 762.86 126.43 762.86 126.43C759.64 115.97 752.60 111.14 728.06 111.14C728.06 111.14 708.75 111.14 708.75 111.14C708.75 111.14 708.75 171.89 708.75 171.89C708.75 178.33 712.37 181.95 718.81 181.95C718.81 181.95 738.12 181.95 738.12 181.95C758.44 181.95 772.32 175.91 779.96 155.40C779.96 155.40 782.58 155.80 782.58 155.80C782.58 155.80 781.17 185.18 781.17 185.18C781.17 185.18 679.37 185.18 679.37 185.18C679.37 185.18 679.38 185.19 679.38 185.19Z"]
+const INTRO_KEY = "esc-intro-seen"
+const INTRO_MS = { mountGate: 2200, exit: 3500, gone: 4300 }
+const introEase: any = [0.22, 0.61, 0.36, 1]
+
+function introSeen() {
+    try { return window.sessionStorage.getItem(INTRO_KEY) === "1" } catch { return false }
+}
+function markIntroSeen() {
+    try { window.sessionStorage.setItem(INTRO_KEY, "1") } catch {}
+}
+
+function IntroSplash(p: { onMountGate: () => void; onDone: () => void }) {
+    const reduce = useReducedMotion()
+    const [leaving, setLeaving] = React.useState(false)
+    const doneRef = React.useRef(false)
+    const ms = reduce ? { mountGate: 0, exit: 1300, gone: 1700 } : INTRO_MS
+
+    const leave = React.useCallback(() => {
+        if (doneRef.current) return
+        doneRef.current = true
+        markIntroSeen()
+        p.onMountGate()
+        setLeaving(true)
+        window.setTimeout(p.onDone, reduce ? 400 : 800)
+    }, [p, reduce])
+
+    React.useEffect(() => {
+        const t1 = window.setTimeout(p.onMountGate, ms.mountGate)
+        const t2 = window.setTimeout(leave, ms.exit)
+        const onKey = () => leave()
+        window.addEventListener("keydown", onKey)
+        const html = document.documentElement
+        const prev = html.style.overflow
+        html.style.overflow = "hidden"
+        return () => { window.clearTimeout(t1); window.clearTimeout(t2); window.removeEventListener("keydown", onKey); html.style.overflow = prev }
+    }, [])
+
+    const clipId = React.useId().replace(/:/g, "")
+    const vb = "50 32 742 165"
+    const css = `.esc-intro{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;background:#0B1230;cursor:pointer;overflow:hidden}
+.esc-intro-mark{width:min(64vw,560px);height:auto;display:block;overflow:visible}
+.esc-intro-tag{margin-top:clamp(18px,3vw,28px);font:400 clamp(11px,1.1vw,13px)/1 "Work Sans",system-ui,sans-serif;letter-spacing:.42em;text-transform:uppercase;color:rgba(230,234,244,.72);text-align:center;padding-left:.42em}
+.esc-intro-skip{all:unset;position:absolute;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));font:500 12px/1 "Work Sans",system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:rgba(230,234,244,.55);padding:12px 14px;border-radius:999px;cursor:pointer}
+.esc-intro-skip:hover,.esc-intro-skip:focus-visible{color:#E6EAF4;background:rgba(230,234,244,.08)}
+.esc-intro-skip:focus-visible{outline:2px solid rgba(185,163,240,.8);outline-offset:2px}
+@media (max-width:640px){.esc-intro-mark{width:82vw}}`
+
+    return (
+        <motion.div
+            className="esc-intro"
+            role="img"
+            aria-label="Escape"
+            onClick={leave}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: leaving ? 0 : 1 }}
+            transition={{ duration: reduce ? 0.4 : 0.8, ease: introEase }}
+            style={{ pointerEvents: leaving ? "none" : "auto" }}
+        >
+            <style>{css}</style>
+            {/* breathing glow behind the wordmark */}
+            {!reduce && (
+                <>
+                    <motion.div aria-hidden
+                        style={{ position: "absolute", left: "50%", top: "50%", width: "max(160vmin,1000px)", aspectRatio: "1", translateX: "-50%", translateY: "-50%", borderRadius: "50%", background: "radial-gradient(closest-side, rgba(79,107,255,.30) 0%, rgba(92,104,236,.22) 18%, rgba(120,116,224,.12) 40%, rgba(142,124,217,.05) 62%, rgba(11,18,48,0) 100%)" }}
+                        initial={{ opacity: 0, scale: 0.55 }}
+                        animate={leaving ? { opacity: 0, scale: 1.25 } : { opacity: [0, 1, 0.8], scale: [0.55, 1, 0.94] }}
+                        transition={leaving ? { duration: 0.8, ease: introEase } : { duration: 2.8, ease: introEase, times: [0, 0.55, 1] }}
+                    />
+                    <motion.div aria-hidden
+                        style={{ position: "absolute", left: "50%", top: "50%", width: "max(80vmin,520px)", aspectRatio: "1", translateX: "-50%", translateY: "-50%", borderRadius: "50%", background: "radial-gradient(closest-side, rgba(185,163,240,.20) 0%, rgba(185,163,240,.08) 45%, rgba(185,163,240,0) 100%)" }}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={leaving ? { opacity: 0 } : { opacity: [0, 0.9, 0.5, 0.9], scale: [0.8, 1.05, 1, 1.05] }}
+                        transition={leaving ? { duration: 0.6 } : { duration: 3.2, ease: "easeInOut", times: [0, 0.35, 0.7, 1] }}
+                    />
+                </>
+            )}
+            <motion.div
+                style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}
+                animate={leaving && !reduce ? { scale: 1.08, opacity: 0, filter: "blur(6px)" } : { scale: 1, opacity: 1, filter: "blur(0px)" }}
+                transition={{ duration: 0.8, ease: introEase }}
+            >
+                <svg className="esc-intro-mark" viewBox={vb} aria-hidden>
+                    <defs>
+                        <clipPath id={`m${clipId}`}>
+                            {INTRO_LETTERS.map((d: string, i: number) => <path key={i} d={d} fillRule="evenodd" />)}
+                        </clipPath>
+                        <linearGradient id={`g${clipId}`} x1="0" x2="1" y1="0" y2="0">
+                            <stop offset="0" stopColor="#fff" stopOpacity="0" />
+                            <stop offset="0.5" stopColor="#fff" stopOpacity="0.95" />
+                            <stop offset="1" stopColor="#fff" stopOpacity="0" />
+                        </linearGradient>
+                    </defs>
+                    {INTRO_LETTERS.map((d: string, i: number) => (
+                        <motion.path key={i} d={d} fill="#E6EAF4" fillRule="evenodd"
+                            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 22, filter: "blur(10px)" }}
+                            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0, filter: "blur(0px)" }}
+                            transition={reduce ? { duration: 0.5 } : { duration: 1.15, delay: 0.3 + i * 0.09, ease: introEase }}
+                        />
+                    ))}
+                    {!reduce && (
+                        <g clipPath={`url(#m${clipId})`}>
+                            <motion.rect y="30" width="180" height="170" fill={`url(#g${clipId})`}
+                                initial={{ x: -200 }} animate={{ x: 820 }}
+                                transition={{ duration: 1.1, delay: 1.55, ease: [0.45, 0, 0.25, 1] }} />
+                        </g>
+                    )}
+                </svg>
+                <motion.div className="esc-intro-tag"
+                    initial={{ opacity: 0, y: 8, letterSpacing: "0.6em" }}
+                    animate={{ opacity: 1, y: 0, letterSpacing: "0.42em" }}
+                    transition={{ duration: reduce ? 0.4 : 1.1, delay: reduce ? 0.2 : 1.35, ease: introEase }}>
+                    Your everyday escape
+                </motion.div>
+                {!reduce && (
+                    <motion.div aria-hidden style={{ height: 1, marginTop: 18, background: "linear-gradient(90deg, rgba(185,163,240,0), rgba(185,163,240,.7), rgba(185,163,240,0))" }}
+                        initial={{ width: 0, opacity: 0 }} animate={{ width: 180, opacity: 1 }}
+                        transition={{ duration: 1.2, delay: 1.5, ease: introEase }} />
+                )}
+            </motion.div>
+            <button type="button" className="esc-intro-skip" onClick={(e) => { e.stopPropagation(); leave() }}>Skip</button>
+        </motion.div>
+    )
+}
+
 // ═══════════════ EscapeSite: the whole site in one component ═══════════════
 const PathGate = __PathGate.default
 const SiteNav = __SiteNav.default
@@ -4594,6 +4724,9 @@ export default function EscapeSite(p: SiteProps) {
     const onCanvas = RenderTarget.current() === RenderTarget.canvas
     const start = p.gateFirst ? "/" : PATH_OF[p.startPage] || "/home"
     const [r, setR] = React.useState(() => (onCanvas ? { path: PATH_OF[p.startPage] || "/", anchor: "" } : readRoute(start)))
+    // the wordmark intro: only when landing on the gate, once per session, never on the canvas
+    const [intro, setIntro] = React.useState(() => !onCanvas && isBrowser && readRoute(start).path === "/" && !introSeen())
+    const [gateIn, setGateIn] = React.useState(() => !intro)
 
     // canvas preview follows the "Show page" control
     React.useEffect(() => { if (onCanvas) setR({ path: PATH_OF[p.startPage] || "/", anchor: "" }) }, [onCanvas, p.startPage])
@@ -4638,7 +4771,8 @@ export default function EscapeSite(p: SiteProps) {
         return (
             <div className="esc-site esc-site-gate">
                 <style>{css}</style>
-                <PathGate {...defaults(PathGate)} />
+                {gateIn && <PathGate {...defaults(PathGate)} />}
+                {intro && <IntroSplash onMountGate={() => setGateIn(true)} onDone={() => setIntro(false)} />}
             </div>
         )
     }
