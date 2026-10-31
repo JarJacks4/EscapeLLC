@@ -4741,7 +4741,11 @@ export default function EscapeSite(p: SiteProps) {
             const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
             if (reduce || root.classList.contains("esc-leaving")) { window.location.hash = target; return }
             root.classList.add("esc-leaving")
-            window.setTimeout(() => { window.location.hash = target; requestAnimationFrame(() => root.classList.remove("esc-leaving")) }, 450)
+            window.setTimeout(() => {
+                window.location.hash = target
+                // two frames: the new page has painted under the navy veil before it fades away
+                requestAnimationFrame(() => requestAnimationFrame(() => root.classList.remove("esc-leaving")))
+            }, 400)
         }
         ;(window as any).__escapeNavigate = go
         // every <a href="/home"> or "#section" inside the site routes inside this component
@@ -4765,20 +4769,24 @@ export default function EscapeSite(p: SiteProps) {
         if (p.pageTitles) document.title = r.path === "/" ? "Escape · How are you arriving today?" : SITE_PAGES[r.path]?.title || "Escape"
     }, [r.path, r.anchor, onCanvas, p.pageTitles])
 
-    const css = `html{scroll-behavior:smooth}.esc-site{position:relative;width:100%;min-width:0;overflow-x:clip;background:#0B1230;transition:opacity .45s cubic-bezier(.22,.61,.36,1)}html.esc-leaving .esc-site{opacity:0}@media (prefers-reduced-motion:reduce){.esc-site{transition:none}html{scroll-behavior:auto}}.esc-site-gate{min-height:100vh;min-height:100svh}`
+    const css = `html{scroll-behavior:smooth}.esc-site{position:relative;width:100%;min-width:0;overflow-x:clip;background:#0B1230}.esc-veil{position:fixed;inset:0;z-index:50;background:#0B1230;opacity:0;pointer-events:none;transition:opacity .4s cubic-bezier(.22,.61,.36,1)}html.esc-leaving .esc-veil{opacity:1;pointer-events:auto}@media (prefers-reduced-motion:reduce){.esc-veil{transition:none}html{scroll-behavior:auto}}.esc-site-gate{min-height:100vh;min-height:100svh}`
 
     if (r.path === "/" || !SITE_PAGES[r.path]) {
         return (
-            <div className="esc-site esc-site-gate">
-                <style>{css}</style>
-                {gateIn && <PathGate {...defaults(PathGate)} />}
-                {intro && <IntroSplash onMountGate={() => setGateIn(true)} onDone={() => setIntro(false)} />}
-            </div>
+            <>
+                <div className="esc-site esc-site-gate">
+                    <style>{css}</style>
+                    {gateIn && <PathGate {...defaults(PathGate)} />}
+                    {intro && <IntroSplash onMountGate={() => setGateIn(true)} onDone={() => setIntro(false)} />}
+                </div>
+                <div className="esc-veil" aria-hidden />
+            </>
         )
     }
     const P = SITE_PAGES[r.path]
     const Body = P.body
     return (
+        <>
         <div className="esc-site" key={r.path}>
             <style>{css}</style>
             <div style={{ position: onCanvas ? "absolute" : "fixed", top: 0, left: 0, right: 0, zIndex: 20 }}>
@@ -4789,6 +4797,8 @@ export default function EscapeSite(p: SiteProps) {
             </main>
             <SiteFooter {...defaults(SiteFooter)} />
         </div>
+        <div className="esc-veil" aria-hidden />
+        </>
     )
 }
 
