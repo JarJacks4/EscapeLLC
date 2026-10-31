@@ -1645,6 +1645,7 @@ const __SiteNav = (() => {
 
 // ═══════════════ SiteFooter ═══════════════
 const __SiteFooter = (() => {
+    const src = (v: any) => (typeof v === "string" ? v : v?.src) || ""
     // Escape — site footer. Fill width, auto height, at the bottom of every page.
 
 
@@ -1658,6 +1659,10 @@ const __SiteFooter = (() => {
         appStoreUrl: string
         playUrl: string
         contactEmail: string
+        instagramIcon?: any
+        tiktokIcon?: any
+        facebookIcon?: any
+        linkedinIcon?: any
         instagramUrl: string
         tiktokUrl: string
         linkedinUrl: string
@@ -1682,12 +1687,22 @@ const __SiteFooter = (() => {
                             <a href={ROUTES.home} className="esc-d foot-mark" aria-label="Escape home">ESCAPE<sup>™</sup></a>
                             <p className="esc-p" style={{ maxWidth: 340 }}>{p.tagline}</p>
                             <StoreBadges appStoreUrl={p.appStoreUrl || undefined} playUrl={p.playUrl || undefined} />
-                            <div className="esc-row" style={{ gap: 18 }}>
-                                {p.instagramUrl && <a className="esc-link" href={p.instagramUrl} target="_blank" rel="noopener noreferrer">Instagram</a>}
-                                {p.tiktokUrl && <a className="esc-link" href={p.tiktokUrl} target="_blank" rel="noopener noreferrer">TikTok</a>}
-                                {p.facebookUrl && <a className="esc-link" href={p.facebookUrl} target="_blank" rel="noopener noreferrer">Facebook</a>}
-                                {p.linkedinUrl && <a className="esc-link" href={p.linkedinUrl} target="_blank" rel="noopener noreferrer">LinkedIn</a>}
-                            </div>
+                            <ul className="foot-social" aria-label="Escape on social media">
+                                {([["Instagram", p.instagramUrl, p.instagramIcon], ["TikTok", p.tiktokUrl, p.tiktokIcon], ["Facebook", p.facebookUrl, p.facebookIcon], ["LinkedIn", p.linkedinUrl, p.linkedinIcon]] as [string, string, any][])
+                                    .filter(([, url]) => !!url)
+                                    .map(([name, url, icon]) => {
+                                        const img = src(icon)
+                                        return (
+                                            <li key={name}>
+                                                <a className="foot-soc" href={url} target="_blank" rel="noopener noreferrer" onClick={() => track("Contact", { content_name: name.toLowerCase(), placement: "footer_social" })}>
+                                                    {img ? <img src={img} alt="" width={18} height={18} /> : null}
+                                                    <span>{name}</span>
+                                                    <span className="esc-sr"> (opens in a new tab)</span>
+                                                </a>
+                                            </li>
+                                        )
+                                    })}
+                            </ul>
                         </div>
                         {cols.map((c) => (
                             <nav key={c.title} aria-label={c.title} className="foot-col">
@@ -1717,6 +1732,12 @@ const __SiteFooter = (() => {
     .foot{position:relative;padding:clamp(56px,7cqi,88px) 0 28px;border-top:1px solid var(--esc-line)}
     .foot-in{display:grid;grid-template-columns:1.4fr repeat(3,1fr) 1.3fr;gap:clamp(24px,3cqi,40px);align-items:start}
     .foot-brand{display:flex;flex-direction:column;gap:18px}
+    .foot-social{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+    .foot-soc{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--esc-line);background:rgba(255,255,255,.06);color:var(--esc-ink);font-size:14px;font-weight:600;text-decoration:none;transition:background .2s,border-color .2s,transform .2s}
+    .foot-soc:hover{background:rgba(255,255,255,.12);border-color:rgba(185,163,240,.6);transform:translateY(-1px)}
+    .foot-soc:focus-visible{outline:2px solid rgba(185,163,240,.9);outline-offset:2px}
+    .foot-soc img{display:block;border-radius:4px}
+    @media (prefers-reduced-motion: reduce){.foot-soc{transition:none}.foot-soc:hover{transform:none}}
     .foot-mark{font-size:26px;letter-spacing:.14em;color:var(--esc-ink);text-decoration:none}
     .foot-mark sup{font-size:.45em;letter-spacing:0;margin-left:2px}
     .foot-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
@@ -1738,7 +1759,7 @@ const __SiteFooter = (() => {
         accessHref: ROUTES.beta,
         appStoreUrl: "",
         playUrl: "",
-        contactEmail: "privacy@escapeapp.ai",
+        contactEmail: "hello@escapeapp.ai",
         instagramUrl: LINKS.instagram,
         facebookUrl: LINKS.facebook,
         tiktokUrl: LINKS.tiktok,
@@ -1758,6 +1779,11 @@ const __SiteFooter = (() => {
         tiktokUrl: { type: ControlType.Link, title: "TikTok" },
         linkedinUrl: { type: ControlType.Link, title: "LinkedIn" },
         facebookUrl: { type: ControlType.Link, title: "Facebook" },
+        // Official icons from each platform's brand resources, uploaded in Framer (not redrawn).
+        instagramIcon: { type: ControlType.Image, title: "Instagram icon" },
+        tiktokIcon: { type: ControlType.Image, title: "TikTok icon" },
+        facebookIcon: { type: ControlType.Image, title: "Facebook icon" },
+        linkedinIcon: { type: ControlType.Image, title: "LinkedIn icon" },
     })
     return { default: SiteFooter }
 })()
@@ -2034,7 +2060,7 @@ const __HomePage = (() => {
                 <div className="esc-wrap hero-in">
                     <div className="hero-copy esc-serene">
                         <Eyebrow>AI self-care companion · Powered by Lucille</Eyebrow>
-                        <h1 className="esc-d esc-h1">Your Everyday Escape</h1>
+                        <h1 className="esc-d esc-h1">Your Everyday Companion</h1>
                         <p className="esc-d esc-gold hero-tag">Not a way out — a way in.</p>
                         <p className="esc-lede">A self-care app and immersive experience for reflection, presence and personal expression, at your own pace. Check in, talk with Lucille, and get a day that fits how you actually feel.</p>
                         <div className="esc-row" style={{ gap: 12, marginTop: 8 }}>
@@ -2891,7 +2917,7 @@ const __PricingPage = (() => {
 
                 <section className="esc-sec">
                     <div className="esc-wrap">
-                        <SectionHead center eyebrow="Full ecosystem access" title="Everything you need for your everyday escape" />
+                        <SectionHead center eyebrow="Full ecosystem access" title="Everything you need for everyday self-care" />
                         <div className="esc-grid g4">
                             <Feature icon="chat" title="Lucille" body="A companion that adapts to how you feel, by text or voice." />
                             <Feature icon="move" title="Sessions" body="Breathing, resets, yoga, pilates and tai chi, sized to your energy." delay={0.05} />
@@ -4660,7 +4686,7 @@ function IntroSplash(p: { onMountGate: () => void; onDone: () => void }) {
                     initial={{ opacity: 0, y: 8, letterSpacing: "0.6em" }}
                     animate={{ opacity: 1, y: 0, letterSpacing: "0.42em" }}
                     transition={{ duration: reduce ? 0.4 : 1.1, delay: reduce ? 0.2 : 1.35, ease: introEase }}>
-                    Your everyday escape
+                    Not a way out. A way in.
                 </motion.div>
                 {!reduce && (
                     <motion.div aria-hidden style={{ height: 1, marginTop: 18, background: "linear-gradient(90deg, rgba(185,163,240,0), rgba(185,163,240,.7), rgba(185,163,240,0))" }}
@@ -4680,7 +4706,7 @@ const SiteFooter = __SiteFooter.default
 
 type PageKey = "gate" | "home" | "lucille" | "marketplace" | "pricing" | "innerverse" | "beta" | "demo" | "privacy" | "health" | "terms" | "safety" | "deleteAccount" | "cookies"
 const SITE_PAGES: Record<string, { key: PageKey; body: any; nav: string; props?: any; title: string }> = {
-    "/home": { key: "home", body: __HomePage.default, nav: "home", title: "Escape · Your Everyday Escape" },
+    "/home": { key: "home", body: __HomePage.default, nav: "home", title: "Escape · Your Everyday Companion" },
     "/lucille-ai": { key: "lucille", body: __LucillePage.default, nav: "lucille", title: "Lucille AI · Escape" },
     "/marketplace": { key: "marketplace", body: __MarketplacePage.default, nav: "marketplace", title: "Marketplace · Escape" },
     "/pricing": { key: "pricing", body: __PricingPage.default, nav: "pricing", title: "Pricing · Escape" },
