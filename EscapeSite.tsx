@@ -2053,6 +2053,82 @@ const __HomePage = (() => {
         )
     }
 
+    // ───────────────────────── hero light field ─────────────────────────
+    // TouchDesigner reference "Slamtec LiDAR / optical flow": soft points in the mood's colour drift
+    // behind the hero and part around the visitor's cursor or finger. Pure canvas, about 150 points,
+    // paused when off screen or in a background tab, and not drawn at all under Reduce Motion.
+    function HeroField() {
+        const ref = React.useRef<HTMLCanvasElement | null>(null)
+        const reduce = useReducedMotion()
+        React.useEffect(() => {
+            const c = ref.current
+            if (!c || reduce || !isBrowser) return
+            const host = c.parentElement as HTMLElement
+            const ctx = c.getContext("2d")
+            if (!ctx) return
+            let w = 0, h = 0, raf = 0, visible = true, last = performance.now(), t = 0
+            let px = -1e4, py = -1e4, pv = 0
+            type D = { x: number; y: number; vx: number; vy: number; ph: number; s: number }
+            let dots: D[] = []
+            const size = () => {
+                const r = host.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1)
+                w = r.width; h = r.height
+                c.width = Math.round(w * dpr); c.height = Math.round(h * dpr)
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+                const n = Math.min(170, Math.round((w * h) / 9000))
+                dots = Array.from({ length: n }, () => ({ x: Math.random() * w, y: Math.random() * h, vx: 0, vy: 0, ph: Math.random(), s: 0.7 + Math.random() * 1.7 }))
+            }
+            const colour = () => getComputedStyle(document.documentElement).getPropertyValue("--esc-accent").trim() || "#B9A3F0"
+            const move = (e: PointerEvent) => {
+                const r = host.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top
+                pv = Math.min(1, Math.hypot(x - px, y - py) / 40)
+                px = x; py = y
+            }
+            const leave = () => { px = py = -1e4 }
+            const frame = (now: number) => {
+                raf = 0
+                const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt
+                const damp = Math.exp(-1.8 * dt), reach = 130, col = colour()
+                for (const d of dots) {
+                    let fx = 9 * Math.sin(t * 0.3 + d.ph * 6.283), fy = 9 * Math.cos(t * 0.25 + d.ph * 4.1) - 4
+                    const dx = d.x - px, dy = d.y - py, q = dx * dx + dy * dy
+                    if (q < reach * reach && q > 1e-3) {
+                        const dist = Math.sqrt(q), k = (420 + 900 * pv) * (1 - dist / reach)
+                        fx += (dx / dist) * k - (dy / dist) * k * 0.3
+                        fy += (dy / dist) * k + (dx / dist) * k * 0.3
+                    }
+                    d.vx = (d.vx + fx * dt) * damp; d.vy = (d.vy + fy * dt) * damp
+                    d.x = (((d.x + d.vx * dt) % w) + w) % w; d.y = (((d.y + d.vy * dt) % h) + h) % h
+                }
+                pv *= Math.exp(-4 * dt)
+                ctx.clearRect(0, 0, w, h)
+                ctx.globalCompositeOperation = "lighter"
+                ctx.fillStyle = col
+                for (const d of dots) {
+                    const sp = Math.min(1, Math.hypot(d.vx, d.vy) / 260)
+                    ctx.globalAlpha = 0.22 + 0.5 * sp
+                    ctx.beginPath(); ctx.arc(d.x, d.y, d.s * (1 + sp), 0, 6.283); ctx.fill()
+                }
+                ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over"
+                if (visible && !document.hidden) raf = requestAnimationFrame(frame)
+            }
+            const kick = () => { if (!raf && visible && !document.hidden) { last = performance.now(); raf = requestAnimationFrame(frame) } }
+            size()
+            const ro = new ResizeObserver(size); ro.observe(host)
+            const io = new IntersectionObserver((es) => { visible = es[0]?.isIntersecting ?? true; kick() }); io.observe(host)
+            host.addEventListener("pointermove", move); host.addEventListener("pointerdown", move); host.addEventListener("pointerleave", leave)
+            document.addEventListener("visibilitychange", kick)
+            kick()
+            return () => {
+                cancelAnimationFrame(raf); ro.disconnect(); io.disconnect()
+                host.removeEventListener("pointermove", move); host.removeEventListener("pointerdown", move); host.removeEventListener("pointerleave", leave)
+                document.removeEventListener("visibilitychange", kick)
+            }
+        }, [reduce])
+        if (reduce) return null
+        return <canvas ref={ref} aria-hidden className="hero-field" />
+    }
+
     // ───────────────────────── hero (the app splash) ─────────────────────────
 
     function Hero(p: Props) {
@@ -2065,6 +2141,7 @@ const __HomePage = (() => {
         return (
             <motion.section className="hero" {...fade(600)}>
                 <Backdrop top />
+                <HeroField />
                 <div className="esc-wrap hero-in">
                     <div className="hero-copy esc-serene">
                         <Eyebrow>AI self-care companion · Powered by Lucille</Eyebrow>
@@ -2368,6 +2445,8 @@ const __HomePage = (() => {
 
     const HOME_CSS = `
     .hero{position:relative;padding:clamp(120px,12cqi,168px) 0 clamp(64px,8cqi,112px)}
+    .hero-field{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+    .hero-in{position:relative;z-index:1}
     .hero-in{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(32px,5cqi,80px);align-items:center}
     .hero-copy{display:flex;flex-direction:column;align-items:flex-start;gap:20px}
     .hero-tag{font-size:clamp(24px,2.6cqi,34px);margin:-4px 0 0}
