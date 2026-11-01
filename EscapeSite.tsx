@@ -334,6 +334,14 @@ function applyVars() {
     root.dataset.escTone = state.tone
     root.dataset.escMood = state.mood || "none"
     root.style.colorScheme = state.tone
+    // Paint the page behind the site in the tone's colour, so iOS rubber-band scrolling, the
+    // address-bar resize and page changes never show Framer's white page underneath.
+    const bg = t["--esc-bg"] || "#0B1230"
+    root.style.backgroundColor = bg
+    if (document.body) document.body.style.backgroundColor = bg
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null
+    if (!meta) { meta = document.createElement("meta"); meta.name = "theme-color"; document.head.appendChild(meta) }
+    meta.content = bg
 }
 
 // ───────────────────────── global CSS + fonts ─────────────────────────
@@ -4754,6 +4762,9 @@ export default function EscapeSite(p: SiteProps) {
     const [intro, setIntro] = React.useState(() => !onCanvas && isBrowser && readRoute(start).path === "/" && !introSeen())
     const [gateIn, setGateIn] = React.useState(() => !intro)
 
+    // the page colour behind the site (and the phone's status bar colour) from the first frame, gate included
+    React.useEffect(() => { if (!onCanvas) applyVars() }, [onCanvas])
+
     // canvas preview follows the "Show page" control
     React.useEffect(() => { if (onCanvas) setR({ path: PATH_OF[p.startPage] || "/", anchor: "" }) }, [onCanvas, p.startPage])
 
@@ -4795,7 +4806,7 @@ export default function EscapeSite(p: SiteProps) {
         if (p.pageTitles) document.title = r.path === "/" ? "Escape · How are you arriving today?" : SITE_PAGES[r.path]?.title || "Escape"
     }, [r.path, r.anchor, onCanvas, p.pageTitles])
 
-    const css = `html{scroll-behavior:smooth}.esc-site{position:relative;width:100%;min-width:0;overflow-x:clip;background:#0B1230}.esc-veil{position:fixed;inset:0;z-index:50;background:#0B1230;opacity:0;pointer-events:none;transition:opacity .4s cubic-bezier(.22,.61,.36,1)}html.esc-leaving .esc-veil{opacity:1;pointer-events:auto}@media (prefers-reduced-motion:reduce){.esc-veil{transition:none}html{scroll-behavior:auto}}.esc-site-gate{min-height:100vh;min-height:100svh}`
+    const css = `html{scroll-behavior:smooth}html,body{background-color:var(--esc-bg,#0B1230);overscroll-behavior-y:none}#main,#main>div,[data-framer-root]{background-color:var(--esc-bg,#0B1230)!important}.esc-site{position:relative;width:100%;min-width:0;min-height:100vh;min-height:100svh;overflow-x:clip;background:var(--esc-bg,#0B1230)}.esc-veil{position:fixed;inset:0;z-index:50;background:#0B1230;opacity:0;pointer-events:none;transition:opacity .4s cubic-bezier(.22,.61,.36,1)}html.esc-leaving .esc-veil{opacity:1;pointer-events:auto}@media (prefers-reduced-motion:reduce){.esc-veil{transition:none}html{scroll-behavior:auto}}.esc-site-gate{min-height:100vh;min-height:100svh}`
 
     if (r.path === "/" || !SITE_PAGES[r.path]) {
         return (
