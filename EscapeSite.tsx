@@ -2220,20 +2220,20 @@ const __HomePage = (() => {
             <section className="esc-sec">
                 <Backdrop intensity={0.55} />
                 <div className="esc-wrap">
-                    <SectionHead center eyebrow="What's inside" title="Everything Escape does for you" lede="It starts with how you're arriving. Escape reads your mood, and everything else follows." />
+                    <SectionHead center eyebrow="What's inside" title="Everything Escape does for you" lede="It starts with how you're arriving. A one-minute Mood Scan, and everything else follows." />
                     <div className="bento">
                         <Card className="b-lucille b-mood esc-stack" style={{ gap: 16 }}>
                             <div className="moodcam" aria-hidden>
                                 <span className="moodcam-corner" /><span className="moodcam-corner" /><span className="moodcam-corner" /><span className="moodcam-corner" />
                                 <Orb mood={s.mood || "restless"} size="58%" live rings />
                                 <span className="moodcam-line" />
-                                <span className="moodcam-tag">Reading your mood…</span>
+                                <span className="moodcam-tag">Reading your pulse…</span>
                             </div>
                             <div>
                                 <span className="esc-over">Our biggest feature</span>
-                                <h3 className="esc-d esc-h3" style={{ marginTop: 6 }}>Mood Analyzer</h3>
+                                <h3 className="esc-d esc-h3" style={{ marginTop: 6 }}>Mood Scan</h3>
                             </div>
-                            <p className="esc-p">A quick look through your camera reads how you're arriving. Lucille, your soundscape, your session and your colors all adapt to it, before you type a word.</p>
+                            <p className="esc-p">Lay a fingertip over your phone's camera and breathe with the orb for about a minute while Escape reads your pulse. Then set your energy, tap how you feel and put a word to it. Lucille, your soundscape, your session and your colors all adapt.</p>
                             <a className="esc-link" href={ROUTES.demo} style={{ marginTop: "auto" }}>See it in the demo <Icon name="arrow" size={16} /></a>
                         </Card>
                         <Card className="esc-stack" style={{ gap: 12 }} delay={0.05}>
@@ -3849,7 +3849,7 @@ const __DemoPage = (() => {
     // Escape — App Demo page body: an interactive, sound-on walkthrough of what makes Escape different.
     // Fill width, auto height.
     //
-    // One flow, in this order: Mood Analyzer reads you → Lucille responds (voice, memory, 120+
+    // One flow, in this order: Mood Scan reads you (fingertip pulse + how you feel, as in the app) → Lucille responds (voice, memory, 120+
     // languages) → a soundscape plays → a workout with Lucille coaching → coins earned → coins redeemed.
     // The screens are drawn in code (no video), and the sound is real: Lucille's lines come from
     // Denise's studio recordings with the app's voice finish, and the soundscape is a Lucille render.
@@ -3879,8 +3879,8 @@ const __DemoPage = (() => {
 
     const CHAPTERS: Chapter[] = [
         {
-            id: "mood", n: 1, title: "Mood Analyzer", icon: "spark", dur: 18000,
-            body: "A short camera read of your pulse and expression tells Escape how you're arriving.",
+            id: "mood", n: 1, title: "Mood Scan", icon: "spark", dur: 18000,
+            body: "A fingertip on the camera reads your pulse while you breathe with the orb. Then you tap how you feel, and Escape knows how you're arriving.",
             cues: [{ at: 1700, chime: "tick" }, { at: 6900, chime: "done" }, { at: 7300, sound: "mood" }],
             captions: [{ at: 7300, to: 9800, text: "Here's what I noticed…" }, { at: 9800, to: 17200, text: "Because you're feeling restless, a one-minute reset gives that energy somewhere slow to go." }],
         },
@@ -4155,20 +4155,23 @@ const __DemoPage = (() => {
                 {!result ? (
                     <>
                         <div className="de-cam">
+                            {/* As in the app: a fingertip over the back camera and flash (no face, no photo). */}
                             <svg viewBox="0 0 200 240" className="de-face" aria-hidden>
-                                <ellipse cx="100" cy="104" rx="56" ry="70" />
-                                <path d="M58 228c4-38 22-54 42-54s38 16 42 54" />
-                                <path d="M76 96q8-6 16 0M108 96q8-6 16 0M84 140q16 10 32 0" />
-                                {scanning && <g className="de-mesh"><path d="M44 104h112M100 34v140M56 64l88 80M144 64l-88 80" /></g>}
+                                <rect x="38" y="22" width="124" height="96" rx="28" />
+                                <circle cx="78" cy="56" r="20" /><circle cx="78" cy="56" r="9" />
+                                <circle cx="124" cy="56" r="7" />
+                                <path className="de-finger" d="M60 236V96c0-26 17-44 40-44s40 18 40 44v140" />
+                                <path d="M80 80q20-12 40 0" />
+                                {scanning && <g className="de-mesh"><path d="M30 186h34l10-22 14 44 14-58 12 36h56" /></g>}
                             </svg>
                             <span className="de-corner" /><span className="de-corner" /><span className="de-corner" /><span className="de-corner" />
                             {scanning && <span className="de-scanline" />}
                             <div className="de-chips">
-                                {(scanning ? ["Face in frame", "Good light", `${secs} s`] : ["Pulse · camera", "How you feel · tap"]).map((c) => <span key={c}>{c}</span>)}
+                                {(scanning ? ["Finger detected", "Steady signal", `${secs} s`] : ["Pulse · finger", "How you feel · tap"]).map((c) => <span key={c}>{c}</span>)}
                             </div>
                         </div>
                         {scanning ? (
-                            <div className="de-row-between"><span className="de-mini">Breathe with the orb. Hold the phone still.</span><span className="de-bpm"><Icon name="heart" size={14} />{bpm} bpm</span></div>
+                            <div className="de-row-between"><span className="de-mini">Breathe with the orb. Keep your finger still.</span><span className="de-bpm"><Icon name="heart" size={14} />{bpm} bpm</span></div>
                         ) : (
                             <span className="de-btn">Start Mood Scan</span>
                         )}
@@ -4370,7 +4373,8 @@ const __DemoPage = (() => {
     .de-cta.ghost{background:transparent;color:#E6EAF4;border:1px solid rgba(230,234,244,.3)}
     .de-cam{position:relative;flex:1;border-radius:24px;overflow:hidden;background:radial-gradient(70% 60% at 50% 42%,rgba(185,163,240,.22),transparent 70%),#0E1538;border:1px solid rgba(230,234,244,.12);display:grid;place-items:center}
     .de-face{width:62%;fill:none;stroke:rgba(230,234,244,.55);stroke-width:2;stroke-linecap:round}
-    .de-mesh path{stroke:rgba(224,88,154,.55);stroke-width:1;stroke-dasharray:3 4}
+    .de-mesh path{stroke:#F49AC2;stroke-width:3;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(224,88,154,.7))}
+    .de-finger{fill:rgba(230,234,244,.12)}
     .de-corner{position:absolute;width:22px;height:22px;border:2px solid #B9A3F0}
     .de-corner:nth-of-type(1){top:12px;left:12px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
     .de-corner:nth-of-type(2){top:12px;right:12px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
