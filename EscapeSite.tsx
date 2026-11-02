@@ -4813,7 +4813,13 @@ const defaults = (C: any) => (C && C.defaultProps) || {}
 function readRoute(fallback: string) {
     if (!isBrowser) return { path: fallback, anchor: "" }
     const h = window.location.hash.replace(/^#/, "")
-    if (!h.startsWith("/")) return { path: fallback, anchor: h }
+    if (!h.startsWith("/")) {
+        // A real path (escapeapp.ai/terms, /safety, /delete-account): the app, the stores and old links
+        // use these. Framer serves this component on its 404 page, so every legal page resolves here.
+        const p = window.location.pathname.replace(/\/+$/, "")
+        if (p && SITE_PAGES[p]) return { path: p, anchor: h }
+        return { path: fallback, anchor: h }
+    }
     const [path, anchor] = h.split("#")
     return { path: path || "/", anchor: anchor || "" }
 }
