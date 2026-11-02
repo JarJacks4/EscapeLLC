@@ -140,6 +140,9 @@ const CONSENT_KEY = "escape.consent.v1"
 type Consent = "accepted" | "declined" | null
 function readConsent(): Consent {
     if (!isBrowser) return null
+    // Global Privacy Control counts as a no: the pixel never loads and the bar doesn't ask
+    // (the Privacy Policy says so).
+    if ((navigator as any).globalPrivacyControl === true) return "declined"
     try { const v = window.localStorage.getItem(CONSENT_KEY); return v === "accepted" || v === "declined" ? v : null } catch { return null }
 }
 function writeConsent(c: Exclude<Consent, null>) {
@@ -376,7 +379,9 @@ const CSS = `
 .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
 @container (max-width:980px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @container (max-width:640px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
-.esc-glass{position:relative;background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));border:1px solid var(--esc-border);border-radius:28px;box-shadow:var(--esc-shadow);-webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);transition:transform .52s var(--esc-ease),border-color .52s var(--esc-ease),background .52s var(--esc-ease)}
+.esc-glass{position:relative;background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2)),linear-gradient(var(--esc-glass2),var(--esc-glass2));border:1px solid var(--esc-border);border-radius:28px;box-shadow:var(--esc-shadow);transition:transform .52s var(--esc-ease),border-color .52s var(--esc-ease),background .52s var(--esc-ease)}
+/* Cards sit on soft, already-blurred glows, so they skip backdrop blur (it re-blurred every card on every scroll frame); the extra layer above keeps them as opaque as before. */
+@media (max-width:700px),(pointer:coarse){.esc-btn-g{-webkit-backdrop-filter:none;backdrop-filter:none}.esc-noise{display:none}}
 .esc-glow::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;background:linear-gradient(140deg,var(--esc-accent),transparent 38%,transparent 62%,var(--esc-glowB));-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.55;transition:opacity .52s var(--esc-ease);pointer-events:none}
 .esc-glow::after{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(120% 80% at 0% 0%,var(--esc-glowA),transparent 55%);opacity:.0;transition:opacity .52s var(--esc-ease);pointer-events:none}
 .esc-lift:hover{transform:translateY(-3px)}
@@ -401,12 +406,12 @@ const CSS = `
 .esc-link{color:var(--esc-accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px}
 .esc-link:hover{text-decoration:underline;text-underline-offset:4px}
 .esc-noise{position:absolute;inset:0;pointer-events:none;opacity:.05;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
-.esc-blob{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;will-change:transform}
+.esc-blob{position:absolute;border-radius:50%;pointer-events:none;will-change:transform}
 @keyframes esc-drift{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(4%,-3%,0) scale(1.08)}}
 @keyframes esc-drift2{0%,100%{transform:translate3d(0,0,0) scale(1.05)}50%{transform:translate3d(-5%,4%,0) scale(.96)}}
 @keyframes esc-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
 @keyframes esc-ring{0%{transform:scale(.92);opacity:.55}100%{transform:scale(1.5);opacity:0}}
-@keyframes esc-serene{from{opacity:0;filter:blur(10px);transform:translateY(12px)}to{opacity:1;filter:none;transform:none}}
+@keyframes esc-serene{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @keyframes esc-pagein{from{opacity:0}to{opacity:1}}
 @keyframes esc-drift-slow{0%,100%{transform:scale(1.06) translate3d(0,0,0)}50%{transform:scale(1.1) translate3d(-1.2%,-.8%,0)}}
 .esc-page{animation:esc-pagein 1.1s var(--esc-ease-soft) both}
@@ -463,8 +468,10 @@ function Reveal(props: { children: React.ReactNode; delay?: number; className?: 
         <Comp
             className={props.className}
             style={props.style}
-            initial={reduce ? false : { opacity: 0, y: 14, filter: "blur(6px)" }}
-            whileInView={{ opacity: 1, y: 0, filter: "blur(0px)", transitionEnd: { filter: "none" } } as any}
+            // Opacity and position only: a blur that animates on every section as it scrolls in made
+            // scrolling choppy (each one is repainted every frame; transform and opacity aren't).
+            initial={reduce ? false : { opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "0px 0px -8% 0px" }}
             transition={{ duration: 1.0, ease: easeSoft, delay: (props.delay || 0) * 1.6 }}
         >
@@ -538,8 +545,8 @@ function Backdrop(props: { intensity?: number; top?: boolean }) {
     const k = props.intensity ?? 1
     return (
         <div aria-hidden style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none", WebkitMaskImage: props.top ? "linear-gradient(#000 70%, transparent)" : "linear-gradient(transparent, #000 22%, #000 78%, transparent)", maskImage: props.top ? "linear-gradient(#000 70%, transparent)" : "linear-gradient(transparent, #000 22%, #000 78%, transparent)" }}>
-            <div className="esc-blob" style={{ width: "62%", aspectRatio: "1", left: "-14%", top: props.top ? "-28%" : "-10%", background: "var(--esc-glowB)", opacity: 0.55 * k, animation: "esc-drift 22s var(--esc-ease) infinite" }} />
-            <div className="esc-blob" style={{ width: "48%", aspectRatio: "1", right: "-12%", top: "18%", background: "var(--esc-glowA)", opacity: 0.38 * k, animation: "esc-drift2 26s var(--esc-ease) infinite" }} />
+            <div className="esc-blob" style={{ width: "62%", aspectRatio: "1", left: "-14%", top: props.top ? "-28%" : "-10%", background: "radial-gradient(closest-side, var(--esc-glowB), transparent)", opacity: 0.55 * k, animation: "esc-drift 22s var(--esc-ease) infinite" }} />
+            <div className="esc-blob" style={{ width: "48%", aspectRatio: "1", right: "-12%", top: "18%", background: "radial-gradient(closest-side, var(--esc-glowA), transparent)", opacity: 0.38 * k, animation: "esc-drift2 26s var(--esc-ease) infinite" }} />
             <div className="esc-noise" />
         </div>
     )
@@ -1097,10 +1104,10 @@ const __PathGate = (() => {
                 <div className="g2">
                     {/* the app's splash, blurred far back: atmosphere, never competing with the orbs */}
                     <motion.div className="g2-bg" aria-hidden initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2.4, ease: easeSoft }}>
-                        <video muted autoPlay loop playsInline preload="auto" poster={src(p.bgPoster) || SPLASH_POSTER} style={{ filter: `blur(${p.bgBlur}px) saturate(1.25) brightness(.88)` }}>
+                        <div className="g2-bg-in"><video muted autoPlay loop playsInline preload="auto" poster={src(p.bgPoster) || SPLASH_POSTER} style={{ filter: `blur(${Math.max(0, p.bgBlur) / 4}px) saturate(1.25) brightness(.88)` }}>
                             {src(p.bgVideoWebm) && <source src={src(p.bgVideoWebm)} type="video/webm" />}
                             {src(p.bgVideo) && <source src={src(p.bgVideo)} type="video/mp4" />}
-                        </video>
+                        </video></div>
                     </motion.div>
                     <AnimatePresence initial={false}>
                         <motion.div key={shown || "none"} aria-hidden className="g2-field" style={{ background: field }} initial={{ opacity: 0 }} animate={{ opacity: m ? p.moodOverlay : 0.6 }} exit={{ opacity: 0 }} transition={{ duration: 1.1, ease: easeSoft }} />
@@ -1268,7 +1275,9 @@ const __PathGate = (() => {
     const CSS = `
     .g2{position:relative;min-height:100svh;width:100%;overflow:clip;display:flex;flex-direction:column;color:#E6EAF4;isolation:isolate}
     .g2-bg{position:absolute;inset:-6%;z-index:-3;overflow:hidden;background:#0B1230}
-    .g2-bg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:62% 30%;animation:esc-drift-slow 32s var(--esc-ease-soft) infinite}
+    .g2-bg-in{position:absolute;inset:0;animation:esc-drift-slow 32s var(--esc-ease-soft) infinite}
+    /* blurred far back, so it is drawn at a quarter size and scaled up: 1/16 of the pixels to blur every frame */
+    .g2-bg video{position:absolute;left:0;top:0;width:25%;height:25%;object-fit:cover;object-position:62% 30%;transform-origin:0 0;transform:scale(4)}
     .g2-field{position:absolute;inset:0;z-index:-2}
     .g2-vignette{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,rgba(11,18,48,.62) 0%,rgba(11,18,48,.38) 38%,rgba(11,18,48,0) 62%),linear-gradient(0deg,rgba(5,8,26,.55) 0%,rgba(5,8,26,0) 22%),linear-gradient(180deg,rgba(5,8,26,.45) 0%,rgba(5,8,26,0) 16%),radial-gradient(120% 100% at 50% 50%,transparent 45%,rgba(5,8,26,.45) 100%)}
     @container (max-width:900px){.g2-vignette{background:linear-gradient(180deg,rgba(11,18,48,.6) 0%,rgba(11,18,48,.3) 45%,rgba(5,8,26,.55) 100%)}}
@@ -2085,10 +2094,15 @@ const __HomePage = (() => {
                 px = x; py = y
             }
             const leave = () => { px = py = -1e4 }
+            // getComputedStyle forces a style recalculation: read the accent about twice a second,
+            // not every frame (it was a steady cost on every frame of the hero).
+            let col = colour(), colAge = 0
             const frame = (now: number) => {
                 raf = 0
                 const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt
-                const damp = Math.exp(-1.8 * dt), reach = 130, col = colour()
+                colAge += dt
+                if (colAge > 0.5) { colAge = 0; col = colour() }
+                const damp = Math.exp(-1.8 * dt), reach = 130
                 for (const d of dots) {
                     let fx = 9 * Math.sin(t * 0.3 + d.ph * 6.283), fy = 9 * Math.cos(t * 0.25 + d.ph * 4.1) - 4
                     const dx = d.x - px, dy = d.y - py, q = dx * dx + dy * dy
@@ -2161,7 +2175,7 @@ const __HomePage = (() => {
                     </div>
 
                     <div className="hero-visual" aria-label="Escape splash: a figure made of soft blue light, with the Escape wordmark" role="img">
-                        <motion.div className="hero-arch" {...(reduce ? {} : { initial: { opacity: 0, filter: "blur(14px)", scale: 1.02 }, animate: { opacity: 1, filter: "blur(0px)", scale: 1 }, transition: { duration: 1.61, ease: [0.42, 0, 0.58, 1] } })}>
+                        <motion.div className="hero-arch" {...(reduce ? {} : { initial: { opacity: 0, scale: 1.02 }, animate: { opacity: 1, scale: 1 }, transition: { duration: 1.61, ease: [0.42, 0, 0.58, 1] } })}>
                             {video ? (
                                 <video poster={poster} muted autoPlay loop playsInline preload="auto">
                                     {webm && <source src={webm} type="video/webm" />}
@@ -2457,7 +2471,7 @@ const __HomePage = (() => {
     .hero-visual{justify-self:center;width:min(100%,440px)}
     .hero-arch{position:relative;aspect-ratio:9/16;max-height:78vh;margin:0 auto;border-radius:999px 999px 44px 44px;overflow:hidden;background:#EDF1F7;box-shadow:0 40px 120px -40px color-mix(in oklab,var(--esc-accent) 70%,transparent),0 0 0 1px var(--esc-border)}
     .hero-arch video,.hero-arch img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:esc-drift-slow 26s var(--esc-ease-soft) infinite}
-    .hero-glow{position:absolute;left:-10%;right:-10%;bottom:0;height:38%;background:linear-gradient(#fff,#39519F);opacity:.7;filter:blur(18px);-webkit-mask-image:linear-gradient(transparent,#000 28%);mask-image:linear-gradient(transparent,#000 28%)}
+    .hero-glow{position:absolute;left:-10%;right:-10%;bottom:0;height:38%;background:linear-gradient(#fff,#39519F);opacity:.7;-webkit-mask-image:linear-gradient(transparent,#000 28%);mask-image:linear-gradient(transparent,#000 28%)}
     .hero-word{position:absolute;left:12%;right:12%;bottom:9%}
     .founder{border-radius:32px;padding:clamp(28px,4cqi,48px);display:flex;flex-direction:column;gap:16px;align-items:center;text-align:center}
     .founder blockquote{margin:0;font-size:clamp(28px,3.4cqi,44px);line-height:1.15;color:var(--esc-ink)}
@@ -3956,9 +3970,12 @@ const __DemoPage = (() => {
             if (!playing) return
             let raf = 0
             last.current = performance.now()
+            // ~30 updates a second: the demo re-renders on every update, and 60 was dropping frames.
+            let acc = 0
             const tick = (now: number) => {
                 const dt = Math.min(100, now - last.current); last.current = now
-                setT((prev) => prev + dt)
+                acc += dt
+                if (acc >= 33) { const step = acc; acc = 0; setT((prev) => prev + step) }
                 raf = requestAnimationFrame(tick)
             }
             raf = requestAnimationFrame(tick)
@@ -4441,9 +4458,8 @@ const __DemoPage = (() => {
 const __LegalPage = (() => {
     // Escape — Legal pages (Privacy Policy, Consumer Health Data Privacy Policy, Terms of Service, Safety & Crisis
     // Protocol, Delete your account, Cookie Policy). Fill width, auto height.
-    // One component, six pages: set "Document" on each page. The text below is a DRAFT written
-    // from what the app actually does (permissions, processors, purchases). Have counsel review it
-    // before publishing, then keep "Last updated" current.
+    // One component, six pages: set "Document" on each page. Written from what the app actually
+    // does (permissions, processors, purchases). Keep "Last updated" current when anything changes.
 
 
 
@@ -4480,7 +4496,6 @@ const __LegalPage = (() => {
                         <Eyebrow>Legal</Eyebrow>
                         <h1 className="esc-d esc-h1">{d.title}</h1>
                         <p className="esc-p">Last updated: {p.lastUpdated} · {p.company}</p>
-                        {p.draft && <p className="esc-small lg-draft">Draft for counsel review. Items marked [confirm] still need a final answer before publishing.</p>}
                         <nav className="lg-tabs" aria-label="Legal documents">
                             {(Object.keys(docs) as Doc[]).map((k) => (
                                 <a key={k} href={docs[k].href} aria-current={k === p.doc ? "page" : undefined} className={k === p.doc ? "on" : ""}>{docs[k].title}</a>
@@ -4518,7 +4533,7 @@ const __LegalPage = (() => {
                                 </div>
                                 <div className="esc-stack" style={{ gap: 6 }}>
                                     <a className="esc-link" href={`mailto:${p.email}`}>{p.email}</a>
-                                    <span className="esc-small">{p.address}</span>
+                                    {p.address && <span className="esc-small">{p.address}</span>}
                                 </div>
                             </div>
                             <a className="esc-link" href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }) }}>Back to top ↑</a>
@@ -4538,15 +4553,15 @@ const __LegalPage = (() => {
             { id: "intro", title: "Who we are", body: <><p>This policy explains how {p.company} ("Escape", "we") handles information when you use the Escape app, Lucille (Escape's AI self-care concierge), Soundscapes, the Innerverse and this website.</p><p>Escape is a self-care and wellbeing app. It is not a medical device and does not provide therapy, diagnosis or treatment.</p><p>If you live in Washington, Nevada or Connecticut, our <a className="esc-link" href={ROUTES.health}>Consumer Health Data Privacy Policy</a> also applies and explains your health-data rights in more detail.</p></> },
             { id: "collect", title: "What we collect", body: <><p><strong>Information you give us</strong></p>{ul([<><strong>Account:</strong> name, email, sign-in method (Apple, Google or email) and your age band (we only keep that you are 18 or older). We do not store your birthday.</>, <><strong>Check-ins:</strong> mood words, sliders and notes. If you connect Apple Health or Health Connect, the heart-rate reading taken at that moment is saved with the check-in.</>, <><strong>Journal:</strong> entries you write or dictate.</>, <><strong>Conversations with Lucille:</strong> messages you type, what you say in voice chat (as a transcript), and short memories Lucille keeps so she can follow up with you.</>, <><strong>Plans and progress:</strong> self-care plans, completed sessions, coins, streaks and Energy Scan results.</>, <><strong>Feedback:</strong> thumbs up or down on Lucille's replies. Written feedback is kept only if you turn on "Help improve Lucille".</>, <><strong>Reports:</strong> if you report one of Lucille's replies, the reply and your reason.</>])}<p><strong>Information from your device, only if you allow it</strong></p>{ul([<><strong>Apple Health / Health Connect:</strong> we read heart rate, heart-rate variability, resting heart rate, sleep, steps and State of Mind to tune sessions, and we save mindful minutes back. Health data is never sold, never used for advertising and never stored in iCloud.</>, <><strong>Camera (Mood Scan):</strong> you place a fingertip over the camera and flash. The phone reads the color change on the device to estimate your pulse. No photo or video is saved or sent; only the pulse number leaves your phone.</>, <><strong>Microphone and speech recognition:</strong> when you talk with Lucille or dictate a journal entry. The recording is sent for transcription and is not stored by Escape.</>, <><strong>Approximate location</strong> (about 1 km) to match Soundscapes to your local weather and time of day.</>, <><strong>Photos</strong> you pick for your profile or a journal entry.</>, <><strong>Notifications:</strong> a push token, if you allow reminders.</>])}<p><strong>Collected automatically:</strong> app version, device type, crash reports, performance data and which screens you use. We do not use advertising IDs, ad networks or cross-app tracking.</p><p><strong>From app stores:</strong> an age-range signal from Apple or Google where the law requires it (for example, Texas). We use it only to apply age protections.</p></> },
             { id: "use", title: "How we use it", body: <>{ul([<>To run Escape: your account, check-ins, journal, plans, Soundscapes and the Innerverse.</>, <>To let Lucille reply with context and suggest what may help today.</>, <>To award coins, calculate your Energy Scan and send the reminders you choose.</>, <>To keep people safe: to detect when someone may be at risk and show crisis resources (see our <a className="esc-link" href={ROUTES.safety}>Safety & Crisis Protocol</a>).</>, <>To keep Escape secure, fix bugs and improve features, using de-identified or aggregated data where we can.</>, <>To compare versions of Lucille in a small, opt-in experiment (see below).</>])}<p>We do not sell your data, use your wellbeing content for advertising, or show ads in Escape.</p></> },
-            { id: "ai", title: "AI services we use", body: <><p>Lucille is an AI. To answer you, your messages and the context she needs are sent to AI providers that process them for us under contract:</p>{ul([<><strong>OpenAI</strong> writes Lucille's replies and transcribes voice recordings. [confirm: OpenAI zero-data-retention status and retention period]</>, <><strong>Anthropic</strong> writes replies only for adults who join our Lucille experiment. You're asked before you join and can leave any time in Privacy & data. Teens are never included.</>, <><strong>Lucille's voice</strong> is generated on our own Google Cloud servers from a voice actor who consented to its use. Your messages are not used to train that voice.</>])}<p>Our providers may not use your data to train their models for anyone else. [confirm: contract terms for each provider]</p></> },
-            { id: "share", title: "Who we share it with", body: <><p>We share information only with service providers that process it for us under contract, or when the law requires it:</p>{ul([<><strong>Google Cloud and Firebase:</strong> hosting, database, sign-in, notifications, crash reports and analytics.</>, <><strong>OpenAI and Anthropic:</strong> Lucille's replies and transcription, as described above.</>, <><strong>Vagon:</strong> streams the Innerverse to your phone. [confirm: whether Vagon keeps session logs]</>, <><strong>Partner brands:</strong> when you redeem a partner reward, we give you a code. We don't send your personal information to the brand.</>, <><strong>Legal and safety:</strong> if required by law, or to protect someone's life or safety.</>])}</> },
-            { id: "keep", title: "How long we keep it", body: <><p>We keep your information while your account is active. When you delete your account, we delete your personal data from our active systems within 30 days, and from backups as they roll off within [confirm: backup period].</p>{ul([<>Voice recordings: not stored by Escape; transcripts are kept with your conversation.</>, <>Conversations and memories: until you delete them or your account. [confirm: automatic deletion period, if any]</>, <>Safety reports: [confirm: period] so we can review them and meet reporting duties, without your name in any report we publish.</>, <>Crash and performance data: [confirm: period].</>])}</> },
+            { id: "ai", title: "AI services we use", body: <><p>Lucille is an AI. To answer you, your messages and the context she needs are sent to AI providers that process them for us under contract:</p>{ul([<><strong>OpenAI</strong> writes Lucille's replies, transcribes voice recordings, and runs a safety check on messages written in languages other than English. OpenAI does not train its models on this data. It keeps reply requests for up to 30 days to monitor for abuse, then deletes them; transcriptions and safety checks are not kept.</>, <><strong>Anthropic</strong> writes replies only for people who join our Lucille experiment. You're asked before you join and can leave any time in Privacy & data. Anthropic deletes what we send within 30 days (longer only if a message breaks its usage policy or the law requires it) and does not train its models on it.</>, <><strong>ElevenLabs</strong> turns Lucille's replies into her voice, from a voice actor who consented to its use. It receives the text of Lucille's reply, not your messages, recordings or account details.</>])}<p>Each provider may use what we send only to provide its service to us. None of them may sell it or use it for advertising.</p></> },
+            { id: "share", title: "Who we share it with", body: <><p>We share information only with service providers that process it for us under contract, or when the law requires it:</p>{ul([<><strong>Google Cloud and Firebase:</strong> hosting, database, sign-in, notifications, crash reports and analytics.</>, <><strong>OpenAI, Anthropic and ElevenLabs:</strong> Lucille's replies, transcription, safety checks and voice, as described above.</>, <><strong>Vagon:</strong> streams the Innerverse to your phone. It receives what it needs to run the stream (such as your IP address and device type), not your messages, journal or health data.</>, <><strong>Open-Meteo:</strong> if you allow location, we send your approximate location to look up local weather for Soundscapes. No name or account details are sent.</>, <><strong>Partner brands:</strong> when you redeem a partner reward, we give you a code. We don't send your personal information to the brand.</>, <><strong>Legal and safety:</strong> if required by law, or to protect someone's life or safety.</>])}</> },
+            { id: "keep", title: "How long we keep it", body: <><p>We keep your information while your account is active. When you delete your account, we delete your personal data from our active systems within 30 days, and from backups as those backups expire, within 90 days at most.</p>{ul([<>Voice recordings: not stored by Escape; transcripts are kept with your conversation.</>, <>Conversations and memories: until you delete them or your account. Nothing is deleted automatically before then.</>, <>Safety reports: up to 3 years, so we can review them and meet reporting duties, without your name in any report we publish.</>, <>Crash and performance data: up to 90 days.</>])}</> },
             { id: "security", title: "Security", body: <><p>Data is encrypted in transit and at rest, access is limited to people who need it, and keys are kept in a secrets manager. No system is perfect; if a breach affects you, we will tell you as the law requires, including within 60 days under the FTC Health Breach Notification Rule.</p></> },
             { id: "choices", title: "Your choices", body: <>{ul([<><strong>In the app (Profile → Privacy & data):</strong> download your data, delete a type of data (for example, all Lucille memories), withdraw consents, or delete your account.</>, <><strong>On the web:</strong> request deletion at <a className="esc-link" href={ROUTES.deleteAccount}>https://escapeapp.ai/delete-account</a>.</>, <><strong>On your device:</strong> turn off Health, camera, microphone, location or notifications at any time.</>])}</> },
             { id: "rights", title: "Your rights by state", body: <><p>Depending on where you live, you can ask to know, access, correct, delete or get a copy of your personal information, and to opt out of sale, sharing for targeted advertising and profiling. We don't sell or share data for advertising, so those apply automatically.</p>{ul([<><strong>California (CCPA/CPRA):</strong> you can limit our use of sensitive personal information. We already use it only to provide Escape. We do not discriminate against you for using your rights.</>, <><strong>Washington, Nevada and Connecticut:</strong> see the <a className="esc-link" href={ROUTES.health}>Consumer Health Data Privacy Policy</a>.</>, <><strong>EEA and UK:</strong> you have rights under the GDPR, including to object and to complain to your data protection authority.</>])}<p>To make a request, use Privacy & data in the app or email {p.email}. We'll confirm who you are, answer within 45 days, and tell you if we need more time. If we decline, you can appeal by replying "Appeal" to our answer; we'll respond within 45 days and, if you're still unhappy, you can contact your state attorney general.</p></> },
             { id: "kids", title: "Children and teens", body: <><p>Escape is for adults 18 and older. If you tell us you are under 18, or your app store tells us so, we stop sign-up, save nothing you entered and delete the account. If we learn later that someone under 18 has an account, we delete it and its data.</p></> },
-            { id: "dnt", title: "Website and Do Not Track", body: <><p>This website doesn't track you across other sites, uses no advertising cookies, and treats every visit the same whether or not your browser sends Do Not Track or Global Privacy Control.</p></> },
-            { id: "changes", title: "Changes and contact", body: <><p>We'll update this page when our practices change and tell you in the app about significant changes.</p><p>Questions: {p.email}. {p.company} · Attn: Privacy & Legal · [confirm mailing address]. Governing law: [confirm with counsel].</p></> },
+            { id: "dnt", title: "Website and Do Not Track", body: <><p>Unless you say yes in the cookie bar, this website loads no tracking or advertising cookies. If you accept the Meta Pixel, Meta can see which of our pages you visit; see our <a className="esc-link" href={ROUTES.cookies}>Cookie Policy</a>. If your browser sends Global Privacy Control, we treat it as a no and don't load the pixel.</p></> },
+            { id: "changes", title: "Changes and contact", body: <><p>We'll update this page when our practices change and tell you in the app about significant changes.</p><p>Questions: {p.email}, Attn: Privacy & Legal, {p.company}.</p></> },
         ]
     }
 
@@ -4558,14 +4573,14 @@ const __LegalPage = (() => {
             { id: "purposes", title: "Why we use it", body: <>{ul([<>To provide the features you ask for: check-ins, journal, Lucille, plans, Soundscapes and the Energy Scan.</>, <>To show crisis resources when someone may be at risk.</>, <>To keep the service secure and working.</>])}<p>We ask for your consent before collecting health data, and separately before sharing it, except where it's strictly needed to provide the feature you asked for.</p></> },
             { id: "sharing", title: "Who receives it", body: <>{ul([<><strong>Processors that run Escape for us:</strong> Google Cloud and Firebase (storage), OpenAI (Lucille's replies and transcription), Anthropic (only for adults in our opt-in Lucille experiment).</>, <><strong>Nobody else,</strong> unless the law requires it or someone's life is at risk.</>])}<p>We never sell consumer health data and never use it for advertising. We do not set up geofences around places where people get health care.</p></> },
             { id: "rights", title: "Your rights", body: <>{ul([<>Confirm whether we collect, share or sell your health data, and see a list of the third parties that received it.</>, <>Get a copy of your health data (Profile → Privacy & data → Download my data).</>, <>Withdraw consent at any time in Privacy & data.</>, <>Delete your health data. We act within 45 days (30 days in Nevada) and pass the request to our processors.</>, <>Appeal a decision by replying "Appeal" to our answer. If you're still unhappy, you can contact the Washington Attorney General at <a className="esc-link" href="https://www.atg.wa.gov/file-complaint" target="_blank" rel="noopener noreferrer">atg.wa.gov</a>.</>])}<p>Use Privacy & data in the app, the <a className="esc-link" href={ROUTES.deleteAccount}>delete-account page</a>, or email {p.email}.</p></> },
-            { id: "contact", title: "Contact", body: <><p>{p.email}. {p.company} · Attn: Privacy & Legal · [confirm mailing address].</p></> },
+            { id: "contact", title: "Contact", body: <><p>{p.email}, Attn: Privacy & Legal, {p.company}.</p></> },
         ]
     }
 
     function terms(p: Props): Section[] {
         return [
             { id: "agree", title: "Agreement", body: <><p>These terms are an agreement between you and {p.company}. By using Escape you agree to them and to our <a className="esc-link" href={ROUTES.privacy}>Privacy Policy</a>. If you don't agree, please don't use Escape.</p><p>If you use Escape on iOS, Apple's <a className="esc-link" href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer">Standard End User License Agreement</a> also applies. Where it conflicts with these terms, these terms apply between you and us.</p></> },
-            { id: "notcare", title: "Self-care, not medical care", body: <><p>Escape and Lucille offer self-care and wellbeing support. They are not therapy, counseling or medical care, and they don't diagnose or treat any condition. Talk to a doctor or licensed professional about your health.</p><p>If you might be in danger: Call or text <strong>988</strong> (Suicide & Crisis Lifeline, US) · Text <strong>HOME to 741741</strong> (Crisis Text Line) · Call <strong>911</strong> in an emergency · Outside the US: <a className="esc-link" href="https://findahelpline.com" target="_blank" rel="noopener noreferrer">findahelpline.com</a>.</p></> },
+            { id: "notcare", title: "Self-care, not medical care", body: <><p>Escape and Lucille offer self-care and wellbeing support. They are not therapy, counseling or medical care, and they don't diagnose or treat any condition. Talk to a doctor or licensed professional about your health.</p><p>If you might be in danger, call your local emergency number or a crisis line. In the US, call or text <strong>988</strong>; in the UK and Ireland, call <strong>116 123</strong>; in Australia, <strong>13 11 14</strong>; in Singapore, <strong>1767</strong>; anywhere else, <a className="esc-link" href="https://findahelpline.com" target="_blank" rel="noopener noreferrer">findahelpline.com</a>. In the app, Help shows the lines for your country.</p></> },
             { id: "lucille", title: "Lucille is an AI", body: <><p>Lucille is software, not a person. Her replies are generated by AI services (OpenAI, and Anthropic for adults in our opt-in experiment) and can be wrong, incomplete or unsuitable. Use your own judgment and don't rely on them for medical, legal, financial or safety decisions.</p><p>If a reply seems wrong or unsafe, tap <strong>Report</strong> on it. We review reports and may change Lucille or remove content.</p></> },
             { id: "account", title: "Your account and age", body: <><p>You must be 18 or older to use Escape. Keep your sign-in secure; you're responsible for activity on your account.</p></> },
             { id: "plans", title: "Free Preview and paid plans", body: <><p>Escape is free during the Free Preview. Before paid plans start, we'll tell you in advance; nothing is charged unless you choose a plan. Paid plans are billed by the App Store or Google Play, renew until you cancel in your store account at least 24 hours before renewal, and refunds follow the store's policies.</p></> },
@@ -4574,21 +4589,21 @@ const __LegalPage = (() => {
             { id: "use", title: "Acceptable use", body: <><p>Don't misuse Escape: no harassment, illegal content, attempts to get Lucille to produce harmful content, attempts to break security, scraping, or reselling access. We may limit or suspend accounts that put others at risk.</p></> },
             { id: "ip", title: "Our content", body: <><p>Escape's app, Soundscapes, Lucille's voice and character, the Innerverse and our brand belong to us or our licensors. You may use them only inside Escape for your personal use.</p></> },
             { id: "liability", title: "Disclaimers and liability", body: <><p>Escape is provided "as is" and "as available". To the extent the law allows, {p.company} isn't liable for indirect or consequential losses, and our total liability is limited to the greater of what you paid us in the past 12 months or $50. Some places don't allow these limits, so they may not apply to you.</p></> },
-            { id: "disputes", title: "Disputes", body: <><p>[confirm with counsel: governing law, venue, informal-resolution period, arbitration or small-claims terms, and class-action waiver, if any].</p></> },
-            { id: "changes", title: "Changes, ending and contact", body: <><p>We may update these terms and will tell you in the app about significant changes. You can stop using Escape and delete your account at any time; we may end access if you break these terms.</p><p>Questions: support@escapeapp.ai. {p.company} · Attn: Privacy & Legal · [confirm mailing address].</p></> },
+            { id: "disputes", title: "Disputes", body: <><p>These terms are governed by the laws of the state where {p.company} is organized, without regard to its conflict-of-law rules. Before bringing a claim, please email support@escapeapp.ai and give us 30 days to try to resolve it informally. Either of us may bring a qualifying claim in small-claims court; otherwise, claims go to the state or federal courts in that state. Nothing in these terms takes away rights your local consumer laws give you that can't be waived.</p></> },
+            { id: "changes", title: "Changes, ending and contact", body: <><p>We may update these terms and will tell you in the app about significant changes. You can stop using Escape and delete your account at any time; we may end access if you break these terms.</p><p>Questions: support@escapeapp.ai, {p.company}.</p></> },
         ]
     }
 
     function safety(p: Props): Section[] {
         return [
-            { id: "now", title: "If you need help now", body: <><p>Call or text <strong>988</strong> (Suicide & Crisis Lifeline, US) · Text <strong>HOME to 741741</strong> (Crisis Text Line) · Call <strong>911</strong> in an emergency · Outside the US: <a className="esc-link" href="https://findahelpline.com" target="_blank" rel="noopener noreferrer">findahelpline.com</a>.</p><p>Lucille is an AI. She can't call for help, and she isn't a crisis service.</p></> },
-            { id: "detect", title: "How we notice someone may be at risk", body: <>{ul([<><strong>On your phone:</strong> before a message leaves your device, Escape checks it for signs of suicidal thoughts, self-harm or wanting to die, including common ways people say it.</>, <><strong>On our servers:</strong> every message to Lucille, typed or spoken, is checked again before any AI sees it, for signs of suicide, self-harm and threats of violence. [confirm: add eating-disorder phrases before Jan 1, 2027 (Washington HB 2225)]</>, <>The checks are tested against a list of real-world example phrases and updated when we find gaps. [confirm: name the evidence-based screening approach counsel and clinicians approve]</>])}</> },
-            { id: "respond", title: "What happens next", body: <>{ul([<>Lucille does not reply with AI. Instead, Escape shows a fixed message written by our team, with 988, the Crisis Text Line, 911 and findahelpline.com, and one-tap buttons to call or text.</>, <>The "I'm really struggling" button on the check-in screen opens the same help at any time.</>, <>We record that crisis resources were shown (not the words of the conversation in any report) so we can count referrals and improve.</>])}</> },
-            { id: "disclose", title: "Reminders that Lucille is an AI", body: <>{ul([<>At the start of every conversation, typed or spoken.</>, <>Every 3 hours (or about every 12 messages) during a conversation.</>, <>For 13- to 17-year-olds: every hour (or every 5 messages), plus reminders to take a break.</>, <>Lucille never claims to be human, to have feelings, or to be a therapist.</>])}</> },
-            { id: "teens", title: "Extra protections for teens", body: <>{ul([<>Hourly AI reminders and break reminders.</>, <>No romantic or sexual content; Lucille is instructed to refuse it for everyone.</>, <>No partner rewards and no AI experiments.</>, <>[confirm: teen memory and notification defaults and parental controls before July 1, 2027 (California SB 1119)]</>])}</> },
-            { id: "report", title: "Reporting a reply", body: <><p>Tap <strong>Report</strong> under any reply from Lucille, or email support@escapeapp.ai with the date and time. Our team reviews safety reports within [confirm: hours/days], and we use them to fix Lucille and our safety checks.</p></> },
+            { id: "now", title: "If you need help now", body: <><p>In an emergency, call your local emergency number (911 in the US and Canada, 000 in Australia, 111 in New Zealand, 999 in the UK, Malaysia and Hong Kong, 995 in Singapore, 112 in India and Ireland).</p>{ul([<>US and Canada: call or text <strong>988</strong></>, <>UK and Ireland: Samaritans, <strong>116 123</strong></>, <>Australia: Lifeline, <strong>13 11 14</strong> · New Zealand: call or text <strong>1737</strong></>, <>Singapore: Samaritans of Singapore, <strong>1767</strong> · Philippines: NCMH, <strong>1553</strong></>, <>Malaysia: Befrienders KL, <strong>03-7627 2929</strong> · Hong Kong: <strong>18111</strong> · India: Tele-MANAS, <strong>14416</strong></>, <>Anywhere else: <a className="esc-link" href="https://findahelpline.com" target="_blank" rel="noopener noreferrer">findahelpline.com</a></>])}<p>Lucille is an AI. She can't call for help, and she isn't a crisis service.</p></> },
+            { id: "detect", title: "How we notice someone may be at risk", body: <>{ul([<><strong>On your phone:</strong> before a message leaves your device, Escape checks it for signs of suicidal thoughts, self-harm or wanting to die, including common ways people say it.</>, <><strong>On our servers:</strong> every message to Lucille, typed or spoken, is checked again before any AI sees it, for signs of suicide, self-harm and threats of violence. Messages in other languages also go through a multilingual safety model.</>, <><strong>Disordered eating:</strong> when a message shows signs of it, Lucille responds gently, avoids numbers like calories or weight, and points to support.</>, <>The checks are tested against a list of real-world example phrases, in English and other languages, and updated when we find gaps.</>])}</> },
+            { id: "respond", title: "What happens next", body: <>{ul([<>Lucille does not reply with AI. Instead, Escape shows a fixed message written by our team, with the crisis lines for your country, your local emergency number and findahelpline.com, and one-tap buttons to call or text.</>, <>The "I'm really struggling" button on the check-in screen opens the same help at any time.</>, <>We record that crisis resources were shown (not the words of the conversation in any report) so we can count referrals and improve.</>])}</> },
+            { id: "disclose", title: "Reminders that Lucille is an AI", body: <>{ul([<>At the start of every conversation, typed or spoken.</>, <>Every 3 hours (or about every 12 messages) during a conversation.</>, <>Lucille never claims to be human, to have feelings, or to be a therapist.</>])}</> },
+            { id: "adults", title: "Adults only", body: <>{ul([<>Escape is for adults 18 and older. Sign-up stops for anyone under 18, and we delete any account we learn belongs to someone under 18.</>, <>Lucille refuses romantic and sexual content for everyone.</>, <>Lucille suggests a break after long conversations.</>])}</> },
+            { id: "report", title: "Reporting a reply", body: <><p>Tap <strong>Report</strong> under any reply from Lucille, or email support@escapeapp.ai with the date and time. Our team reviews safety reports within 2 business days, and we use them to fix Lucille and our safety checks.</p></> },
             { id: "annual", title: "Yearly reporting", body: <><p>Starting July 1, 2027, we report each year to the California Office of Suicide Prevention, and where required to other states, how many times we showed crisis resources and the protocols on this page. Reports contain no personal information.</p></> },
-            { id: "contact", title: "Contact", body: <><p>Safety questions: support@escapeapp.ai. {p.company} · Attn: Privacy & Legal · [confirm mailing address].</p></> },
+            { id: "contact", title: "Contact", body: <><p>Safety questions: support@escapeapp.ai, {p.company}.</p></> },
         ]
     }
 
@@ -4596,8 +4611,8 @@ const __LegalPage = (() => {
         return [
             { id: "app", title: "Delete in the app", body: <>{ul([<>Open Escape and go to <strong>Profile → Privacy & data</strong>.</>, <>Tap <strong>Delete my account</strong> and confirm.</>, <>Your account is deleted right away and you're signed out on this device.</>])}<p>To remove just part of your data (for example, all Lucille memories or journal entries), use the per-type delete options on the same screen.</p></> },
             { id: "web", title: "Request deletion without the app", body: <><p>Email <strong>{p.email}</strong> from the address on your account, with the subject "Delete my account". We'll confirm it's you and delete the account within 30 days, then email you when it's done.</p></> },
-            { id: "what", title: "What gets deleted", body: <>{ul([<>Your account, profile and age band.</>, <>Check-ins, journal entries, plans, coins and progress.</>, <>Conversations with Lucille, her memories, and your feedback.</>, <>Health data saved by Escape. (Data in Apple Health or Health Connect stays there; manage it in those apps.)</>, <>We ask our processors (Google Cloud, OpenAI, Anthropic) to delete what they hold for you.</>])}</> },
-            { id: "kept", title: "What we may keep", body: <>{ul([<>Records we must keep by law, such as safety and fraud-prevention records, for [confirm: period].</>, <>Backups, which roll off within [confirm: backup period].</>, <>De-identified counts (for example, how many people used a feature) that can't be linked back to you.</>])}</> },
+            { id: "what", title: "What gets deleted", body: <>{ul([<>Your account, profile and age band.</>, <>Check-ins, journal entries, plans, coins and progress.</>, <>Conversations with Lucille, her memories, and your feedback.</>, <>Health data saved by Escape. (Data in Apple Health or Health Connect stays there; manage it in those apps.)</>, <>We ask our processors (Google Cloud, OpenAI, Anthropic, ElevenLabs) to delete what they hold for you.</>])}</> },
+            { id: "kept", title: "What we may keep", body: <>{ul([<>Records we must keep by law, such as safety and fraud-prevention records, for up to 3 years.</>, <>Backups, which expire within 90 days.</>, <>De-identified counts (for example, how many people used a feature) that can't be linked back to you.</>])}</> },
         ]
     }
 
@@ -4639,11 +4654,11 @@ const __LegalPage = (() => {
 
     LegalPage.defaultProps = {
         doc: "privacy",
-        lastUpdated: "October 27, 2026",
+        lastUpdated: "November 2, 2026",
         company: "Escape Enterprises LLC",
         email: "privacy@escapeapp.ai",
-        address: "Escape Enterprises LLC · Attn: Privacy & Legal · [confirm mailing address]",
-        draft: true,
+        address: "",
+        draft: false,
     }
     addPropertyControls(LegalPage, {
         doc: { type: ControlType.Enum, title: "Document", options: ["privacy", "health", "terms", "safety", "delete", "cookies"], optionTitles: ["Privacy Policy", "Consumer Health Data", "Terms of Service", "Safety & Crisis Protocol", "Delete your account", "Cookie Policy"] },
@@ -4651,7 +4666,7 @@ const __LegalPage = (() => {
         company: { type: ControlType.String, title: "Company" },
         email: { type: ControlType.String, title: "Email" },
         address: { type: ControlType.String, title: "Mailing address", displayTextArea: true },
-        draft: { type: ControlType.Boolean, title: "Draft banner", defaultValue: true },
+        draft: { type: ControlType.Boolean, title: "Draft banner", defaultValue: false },
     })
     return { default: LegalPage }
 })()
