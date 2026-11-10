@@ -299,7 +299,7 @@ function tokens(s: EscState) {
             "--esc-gold": "#9A4A06",
             "--esc-glass1": "rgba(255,255,255,.78)",
             "--esc-glass2": "rgba(255,255,255,.52)",
-            "--esc-border": "rgba(255,255,255,.95)",
+            "--esc-border": "rgba(31,55,168,.20)",
             "--esc-line": "rgba(11,18,48,.10)",
             "--esc-shadow": "0 18px 50px -24px rgba(31,55,168,.35)",
             "--esc-glowA": m ? m.glowA.replace(/[\d.]+\)$/, ".45)") : "rgba(255,255,255,.95)",
@@ -395,13 +395,14 @@ const CSS = `
 .esc-btn-g{color:var(--esc-ink);background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));border:1px solid var(--esc-border);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
 .esc-btn-g:hover{border-color:var(--esc-accent)}
 .esc-btn-sm{min-height:44px;padding:0 18px;font-size:15px}
+@media (max-width:480px){.esc-btn{white-space:normal;text-align:center;line-height:1.25;max-width:100%;padding-top:12px;padding-bottom:12px}}
 .esc-consent{position:fixed;left:16px;right:16px;bottom:16px;z-index:60;margin:0 auto;max-width:720px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;border-radius:20px;border:1px solid var(--esc-border);background:color-mix(in srgb,var(--esc-bg) 92%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 18px 48px rgba(0,0,0,.28)}
 .esc-consent p{flex:1 1 320px}
 .esc a:focus-visible,.esc button:focus-visible,.esc [tabindex]:focus-visible{outline:3px solid var(--esc-accent);outline-offset:3px;border-radius:14px}
 .esc-chip{display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 14px;border-radius:999px;font-size:13px;font-weight:500;color:var(--esc-muted);background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));border:1px solid var(--esc-border)}
 .esc-dot{width:8px;height:8px;border-radius:50%;background:var(--esc-gold);box-shadow:0 0 12px var(--esc-gold)}
 .esc-soon{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:500;color:var(--esc-gold);border:1px solid color-mix(in oklab,var(--esc-gold) 55%,transparent)}
-.esc-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--esc-accent);background:color-mix(in oklab,var(--esc-accent) 14%,transparent);border:1px solid color-mix(in oklab,var(--esc-accent) 30%,transparent)}
+.esc-icon{flex:none;width:48px;height:48px;border-radius:14px;display:grid;place-items:center;color:var(--esc-accent);background:color-mix(in oklab,var(--esc-accent) 14%,transparent);border:1px solid color-mix(in oklab,var(--esc-accent) 30%,transparent)}
 .esc-hr{height:1px;background:var(--esc-line);border:0;margin:0}
 .esc-link{color:var(--esc-accent);text-decoration:none;font-weight:500;display:inline-flex;align-items:center;gap:6px}
 .esc-link:hover{text-decoration:underline;text-underline-offset:4px}
@@ -838,7 +839,7 @@ function Faq(props: { items: { q: string; a: React.ReactNode }[] }) {
 
 // ───────────────────────── store badges ─────────────────────────
 
-function StoreBadges(props: { appStoreUrl?: string; playUrl?: string }) {
+function StoreBadges(props: { appStoreUrl?: string; playUrl?: string; center?: boolean }) {
     const badge = (store: "apple" | "play", url?: string) => {
         const inner = (
             <>
@@ -849,14 +850,14 @@ function StoreBadges(props: { appStoreUrl?: string; playUrl?: string }) {
                 </span>
             </>
         )
-        const style: React.CSSProperties = { minHeight: 56, padding: "0 20px", borderRadius: 16, gap: 12, display: "inline-flex", alignItems: "center", color: "var(--esc-ink)", textDecoration: "none" }
+        const style: React.CSSProperties = { minHeight: 56, minWidth: 200, padding: "0 20px", borderRadius: 16, gap: 12, display: "inline-flex", alignItems: "center", color: "var(--esc-ink)", textDecoration: "none" }
         return url ? (
             <a className="esc-glass" href={url} target="_blank" rel="noopener noreferrer" style={style}>{inner}</a>
         ) : (
             <span className="esc-glass" style={{ ...style, opacity: 0.9 }} aria-label={`${store === "apple" ? "App Store" : "Google Play"}: coming soon`}>{inner}</span>
         )
     }
-    return <div className="esc-row" style={{ gap: 12 }}>{badge("apple", props.appStoreUrl)}{badge("play", props.playUrl)}</div>
+    return <div className="esc-row" style={{ gap: 12, justifyContent: props.center ? "center" : undefined }}>{badge("apple", props.appStoreUrl)}{badge("play", props.playUrl)}</div>
 }
 
 // ───────────────────────── icons (1.6 px strokes, currentColor) ─────────────────────────
@@ -939,7 +940,7 @@ function ClosingCta(props: { eyebrow?: string; title: React.ReactNode; lede: str
                             <Button href={props.primary.href} arrow>{props.primary.label}</Button>
                             {props.secondary && <Button href={props.secondary.href} variant="ghost" newTab={/^https?:/.test(props.secondary.href)} onClick={() => { if (/discord/i.test(props.secondary!.href)) track("Contact", { content_name: "discord", placement: "closing_cta" }) }}>{props.secondary.label}</Button>}
                         </div>
-                        {props.badges && <div style={{ marginTop: 10 }}><StoreBadges appStoreUrl={props.appStoreUrl} playUrl={props.playUrl} /></div>}
+                        {props.badges && <div style={{ marginTop: 10, width: "100%" }}><StoreBadges center appStoreUrl={props.appStoreUrl} playUrl={props.playUrl} /></div>}
                     </div>
                 </Reveal>
             </div>
@@ -1284,6 +1285,7 @@ const __PathGate = (() => {
     .g2-veil{position:fixed;inset:0;z-index:30;background:#0B1230;pointer-events:none}
     .g2 .esc-noise{z-index:-1}
     .g2 .esc-link{color:#E6EAF4;min-height:44px}
+    .g2-foot .esc-small{color:rgba(230,234,244,.78)}
     .g2-top,.g2-foot{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px clamp(20px,4cqi,48px);flex-wrap:wrap}
     .g2-mark{font-size:22px;letter-spacing:.14em}
     .g2-mark sup{font-size:.45em;letter-spacing:0;margin-left:2px}
@@ -1625,7 +1627,7 @@ const __SiteNav = (() => {
     .nav-sheet-mood{display:flex;align-items:center;gap:12px;color:var(--esc-muted);text-decoration:none;min-height:54px;padding:0 6px}
     .nav-sheet .esc-btn{width:100%}
     @container (max-width:1060px){.nav-links a{padding:0 10px;font-size:14px}}
-    @container (max-width:900px){.nav-links,.nav-cta{display:none}.nav-burger{display:grid}.nav{padding-left:18px}}
+    @container (max-width:900px){.nav-links,.nav-cta{display:none}.nav-burger{display:grid}.nav{padding-left:18px;background:var(--esc-nav);border-color:var(--esc-border);box-shadow:var(--esc-shadow);-webkit-backdrop-filter:blur(20px) saturate(1.2);backdrop-filter:blur(20px) saturate(1.2)}.nav-burger,.nav-burger:hover{background:var(--esc-ink);color:var(--esc-bg);border-color:var(--esc-ink)}}
     `
 
     SiteNav.defaultProps = {
@@ -1704,22 +1706,31 @@ const __SiteFooter = (() => {
                             <a href={ROUTES.home} className="esc-d foot-mark" aria-label="Escape home">ESCAPE<sup>™</sup></a>
                             <p className="esc-p" style={{ maxWidth: 340 }}>{p.tagline}</p>
                             <StoreBadges appStoreUrl={p.appStoreUrl || undefined} playUrl={p.playUrl || undefined} />
-                            <ul className="foot-social" aria-label="Escape on social media">
-                                {([["Instagram", p.instagramUrl, p.instagramIcon], ["TikTok", p.tiktokUrl, p.tiktokIcon], ["Facebook", p.facebookUrl, p.facebookIcon], ["LinkedIn", p.linkedinUrl, p.linkedinIcon]] as [string, string, any][])
-                                    .filter(([, url]) => !!url)
-                                    .map(([name, url, icon]) => {
-                                        const img = src(icon)
-                                        return (
-                                            <li key={name}>
-                                                <a className="foot-soc" href={url} target="_blank" rel="noopener noreferrer" onClick={() => track("Contact", { content_name: name.toLowerCase(), placement: "footer_social" })}>
-                                                    {img ? <img src={img} alt="" width={18} height={18} /> : null}
-                                                    <span>{name}</span>
-                                                    <span className="esc-sr"> (opens in a new tab)</span>
-                                                </a>
-                                            </li>
-                                        )
-                                    })}
-                            </ul>
+                            {(() => {
+                                // Official icons are uploaded in Framer (from each platform's brand resources), never redrawn.
+                                // With all icons in place the footer shows a row of round icon buttons; until then, named chips.
+                                const socials = ([["Instagram", p.instagramUrl, p.instagramIcon], ["TikTok", p.tiktokUrl, p.tiktokIcon], ["Facebook", p.facebookUrl, p.facebookIcon], ["LinkedIn", p.linkedinUrl, p.linkedinIcon]] as [string, string, any][]).filter(([, url]) => !!url)
+                                const iconsOnly = socials.length > 0 && socials.every(([, , icon]) => !!src(icon))
+                                return (
+                                    <div className="foot-soc-wrap">
+                                        <h2 className="esc-over" style={{ margin: 0 }}>Follow Escape</h2>
+                                        <ul className={`foot-social${iconsOnly ? " icons" : ""}`} aria-label="Escape on social media">
+                                            {socials.map(([name, url, icon]) => {
+                                                const img = src(icon)
+                                                return (
+                                                    <li key={name}>
+                                                        <a className="foot-soc" href={url} target="_blank" rel="noopener noreferrer" aria-label={iconsOnly ? `${name} (opens in a new tab)` : undefined} title={iconsOnly ? name : undefined} onClick={() => track("Contact", { content_name: name.toLowerCase(), placement: "footer_social" })}>
+                                                            {img ? <img src={img} alt="" width={iconsOnly ? 22 : 18} height={iconsOnly ? 22 : 18} /> : null}
+                                                            {!iconsOnly && <span>{name}</span>}
+                                                            {!iconsOnly && <span className="esc-sr"> (opens in a new tab)</span>}
+                                                        </a>
+                                                    </li>
+                                                )
+                                            })}
+                                        </ul>
+                                    </div>
+                                )
+                            })()}
                         </div>
                         {cols.map((c) => (
                             <nav key={c.title} aria-label={c.title} className="foot-col">
@@ -1749,7 +1760,11 @@ const __SiteFooter = (() => {
     .foot{position:relative;padding:clamp(56px,7cqi,88px) 0 28px;border-top:1px solid var(--esc-line)}
     .foot-in{display:grid;grid-template-columns:1.4fr repeat(3,1fr) 1.3fr;gap:clamp(24px,3cqi,40px);align-items:start}
     .foot-brand{display:flex;flex-direction:column;gap:18px}
-    .foot-social{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+    .foot-soc-wrap{display:flex;flex-direction:column;gap:10px}
+    .foot-social{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,max-content);gap:8px}
+    .foot-social.icons{display:flex;flex-wrap:wrap;gap:10px}
+    .foot-social.icons .foot-soc{width:44px;height:44px;padding:0;justify-content:center}
+    .foot-social.icons .foot-soc img{width:22px;height:22px;object-fit:contain;border-radius:0}
     .foot-soc{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--esc-line);background:rgba(255,255,255,.06);color:var(--esc-ink);font-size:14px;font-weight:600;text-decoration:none;transition:background .2s,border-color .2s,transform .2s}
     .foot-soc:hover{background:rgba(255,255,255,.12);border-color:rgba(185,163,240,.6);transform:translateY(-1px)}
     .foot-soc:focus-visible{outline:2px solid rgba(185,163,240,.9);outline-offset:2px}
@@ -1758,7 +1773,7 @@ const __SiteFooter = (() => {
     .foot-mark{font-size:26px;letter-spacing:.14em;color:var(--esc-ink);text-decoration:none}
     .foot-mark sup{font-size:.45em;letter-spacing:0;margin-left:2px}
     .foot-col ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
-    .foot-col a{color:var(--esc-muted);text-decoration:none;font-size:15px;min-height:36px;display:inline-flex;align-items:center}
+    .foot-col a{color:var(--esc-muted);text-decoration:none;font-size:15px;min-height:44px;display:inline-flex;align-items:center}
     .foot-col a:hover{color:var(--esc-ink);text-decoration:underline;text-underline-offset:4px}
     .foot-access{border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
     .foot-legal{margin-top:clamp(40px,5cqi,64px);display:flex;flex-direction:column;gap:20px}
@@ -3759,7 +3774,7 @@ const __BetaPage = (() => {
     .be-phone{width:min(320px,80%);aspect-ratio:9/19;border-radius:48px;padding:56px 22px 28px;display:flex;flex-direction:column;align-items:center;gap:10px;position:relative;background:linear-gradient(170deg,color-mix(in oklab,var(--esc-glowB) 60%,transparent),var(--esc-glass2))}
     .be-notch{position:absolute;top:16px;width:96px;height:26px;border-radius:99px;background:rgba(5,8,26,.85)}
     .be-rows{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:14px}
-    .be-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;font-size:13px;white-space:nowrap;overflow:hidden}
+    .be-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;font-size:13px;line-height:1.35}
     .be-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;counter-reset:s}
     .be-step{position:relative;border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:10px}
     .be-num{position:absolute;right:18px;top:12px;font-size:40px;color:color-mix(in oklab,var(--esc-accent) 40%,transparent)}
@@ -3774,7 +3789,7 @@ const __BetaPage = (() => {
     .ap-steps li.on .ap-dot{background:var(--esc-accent);color:var(--esc-onAccent);border-color:transparent}
     .ap-steps li.done .ap-dot{background:var(--esc-glass1)}
     .ap-fs{border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column;gap:18px}
-    .ap-fs legend{padding:0;margin:0 0 4px}
+    .ap-fs legend{padding:0;margin:0 0 14px}
     .ap-h{font-size:clamp(26px,2.6cqi,34px);outline:none;margin:0}
     .ap-field{display:flex;flex-direction:column;gap:6px}
     .ap-field label{font-weight:500;font-size:15px}
@@ -3785,6 +3800,7 @@ const __BetaPage = (() => {
     .ap-field.bad input{border-color:#FF8A80}
     .ap-err{color:#FFB4AB;font-size:14px;margin:0}
     [data-esc-tone="light"] .ap-err{color:#B3261E}
+    [data-esc-tone="light"] .ap-field input,[data-esc-tone="light"] .ap-field select,[data-esc-tone="light"] .ap-box,[data-esc-tone="light"] .ap-choice{background:#FFFFFF;border-color:rgba(11,18,48,.24)}
     .ap-check{display:flex;gap:12px;align-items:flex-start;cursor:pointer;line-height:1.5;min-height:44px}
     .ap-check input{position:absolute;opacity:0;width:1px;height:1px}
     .ap-box{flex:none;width:24px;height:24px;margin-top:1px;border-radius:8px;display:grid;place-items:center;color:transparent;border:1.5px solid var(--esc-border);background:var(--esc-glass2);transition:background .3s,border-color .3s,color .3s}
@@ -4532,7 +4548,7 @@ const __LegalPage = (() => {
                             ))}
                             <div className="esc-glass lg-contact">
                                 <div>
-                                    <h2 className="esc-d" style={{ fontSize: 26, margin: "0 0 6px" }}>Questions about this policy?</h2>
+                                    <h2 className="esc-d" style={{ fontSize: 26, margin: "0 0 6px" }}>{p.doc === "terms" ? "Questions about these terms?" : "Questions about this policy?"}</h2>
                                     <p className="esc-p">Write to us for anything: data access, corrections, deletion or general questions.</p>
                                 </div>
                                 <div className="esc-stack" style={{ gap: 6 }}>
@@ -4847,6 +4863,10 @@ interface SiteProps {
     startPage: PageKey
     gateFirst: boolean
     pageTitles: boolean
+    instagramIcon?: any
+    tiktokIcon?: any
+    facebookIcon?: any
+    linkedinIcon?: any
 }
 
 /**
@@ -4936,7 +4956,7 @@ export default function EscapeSite(p: SiteProps) {
             <main>
                 <Body {...defaults(Body)} {...(P.props || {})} />
             </main>
-            <SiteFooter {...defaults(SiteFooter)} />
+            <SiteFooter {...defaults(SiteFooter)} instagramIcon={p.instagramIcon} tiktokIcon={p.tiktokIcon} facebookIcon={p.facebookIcon} linkedinIcon={p.linkedinIcon} />
         </div>
         <div className="esc-veil" aria-hidden />
         </>
@@ -4954,4 +4974,9 @@ addPropertyControls(EscapeSite, {
         optionTitles: ["Orb gate", "Home", "Lucille AI", "Marketplace", "Pricing", "Innerverse", "App testing (beta)", "App demo", "Privacy", "Health data", "Terms", "Safety", "Delete account", "Cookies"],
     },
     pageTitles: { type: ControlType.Boolean, title: "Tab titles", defaultValue: true, enabledTitle: "Per page", disabledTitle: "Framer's" },
+    // Footer social icons: upload each platform's official icon (from its brand resources). With all four set, the footer shows icon buttons.
+    instagramIcon: { type: ControlType.Image, title: "Instagram icon" },
+    tiktokIcon: { type: ControlType.Image, title: "TikTok icon" },
+    facebookIcon: { type: ControlType.Image, title: "Facebook icon" },
+    linkedinIcon: { type: ControlType.Image, title: "LinkedIn icon" },
 })
