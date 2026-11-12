@@ -996,7 +996,7 @@ const __PathGate = (() => {
             after: "Here's where you could start:",
             options: [
                 { kind: "page", ...P.home, title: "See everything Escape does", body: "The full tour: Lucille, sessions, Soundscapes and your journey.", time: "3 min read", icon: "compass" },
-                { kind: "page", ...P.demo, title: "Watch the app in action", body: "Four short chapters with captions.", time: "3 min video", icon: "play" },
+                { kind: "page", ...P.demo, title: "Watch the app in action", body: "Five short chapters with sound and captions.", time: "90 sec demo", icon: "play" },
                 { kind: "page", ...P.beta, title: "Get early access", body: "Join the beta and help shape Escape.", time: "1 min form", icon: "flask" },
             ],
         },
@@ -1006,7 +1006,7 @@ const __PathGate = (() => {
             options: [
                 { kind: "page", ...P.marketplace, title: "Earn coins and level up", body: "How self-care earns coins and opens your seven energy centers.", time: "2 min read", icon: "coin" },
                 { kind: "page", ...P.beta, title: "Get early access", body: "Be one of the first to try it.", time: "1 min form", icon: "flask" },
-                { kind: "page", ...P.pricing, title: "See plans & pricing", body: "One pass, everything included, 7 days free.", time: "1 min read", icon: "star" },
+                { kind: "page", ...P.pricing, title: "See plans & pricing", body: "One pass, everything included. Free during the preview.", time: "1 min read", icon: "star" },
             ],
         },
         focused: {
@@ -1023,7 +1023,7 @@ const __PathGate = (() => {
             after: "What would help right now?",
             options: [
                 breathe("Take three slow breaths first"),
-                { kind: "page", ...P.demo, title: "Watch the 3-minute demo", body: "See how Escape helps on days like this.", time: "3 min video", icon: "play" },
+                { kind: "page", ...P.demo, title: "Watch the 90-second demo", body: "See how Escape helps on days like this.", time: "90 sec demo", icon: "play" },
                 { kind: "page", ...P.home, title: "Just look around", body: "The full site, at your own pace.", time: "3 min read", icon: "compass" },
             ],
         },
@@ -1385,8 +1385,8 @@ const __JourneyBanner = (() => {
         { href: ROUTES.home, page: "Home", line: "Everything Escape does" },
         { href: ROUTES.lucille, page: "Lucille AI", line: "Your AI companion" },
         { href: ROUTES.marketplace, page: "Marketplace", line: "Coins, levels, rewards" },
-        { href: ROUTES.pricing, page: "Pricing", line: "One pass, 7 days free" },
-        { href: ROUTES.demo, page: "App Demo", line: "3-minute video" },
+        { href: ROUTES.pricing, page: "Pricing", line: "One pass, free for now" },
+        { href: ROUTES.demo, page: "App Demo", line: "90-second demo" },
         { href: ROUTES.innerverse, page: "Innerverse", line: "3D worlds, coming soon" },
         { href: ROUTES.beta, page: "App Testing", line: "Get early access" },
     ]
@@ -1532,8 +1532,13 @@ const __SiteNav = (() => {
         React.useEffect(() => {
             if (!open) return
             const k = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false)
+            const w0 = window.innerWidth
+            const r = () => { if (Math.abs(window.innerWidth - w0) > 40) setOpen(false) }
+            const root = document.documentElement
+            root.classList.add("esc-menu-open")
             window.addEventListener("keydown", k)
-            return () => window.removeEventListener("keydown", k)
+            window.addEventListener("resize", r)
+            return () => { root.classList.remove("esc-menu-open"); window.removeEventListener("keydown", k); window.removeEventListener("resize", r) }
         }, [open])
 
         const links: { key: PageKey; label: string; href: string; soon?: boolean }[] = [
@@ -1619,7 +1624,9 @@ const __SiteNav = (() => {
     .nav-orb,.nav-tone,.nav-burger{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--esc-ink);border:1px solid var(--esc-border);background:linear-gradient(160deg,var(--esc-glass1),var(--esc-glass2));transition:border-color .3s}
     .nav-orb:hover,.nav-tone:hover,.nav-burger:hover{border-color:var(--esc-accent)}
     .nav-burger{display:none}
-    .nav-sheet{position:absolute;left:12px;right:12px;top:84px;z-index:50;padding:16px;border-radius:28px;display:flex;flex-direction:column;gap:14px;background:var(--esc-nav)}
+    .nav-sheet.esc-glass{position:absolute;left:12px;right:12px;top:84px;z-index:50;padding:16px;border-radius:28px;display:flex;flex-direction:column;gap:14px;background:color-mix(in oklab,var(--esc-bg,#0B1230) 94%,transparent);-webkit-backdrop-filter:blur(24px) saturate(1.2);backdrop-filter:blur(24px) saturate(1.2);max-height:calc(100vh - 100px);max-height:calc(100dvh - 100px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+    html.esc-menu-open,html.esc-menu-open body{overflow:hidden}
+    html.esc-menu-open body{touch-action:none}
     .nav-sheet ul{list-style:none;margin:0;padding:0}
     .nav-sheet li a{display:flex;align-items:center;gap:8px;min-height:54px;padding:0 10px;color:var(--esc-ink);text-decoration:none;font-size:18px;border-bottom:1px solid var(--esc-line)}
     .nav-sheet li a svg{margin-left:auto;color:var(--esc-faint)}

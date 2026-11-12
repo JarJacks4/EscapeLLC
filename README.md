@@ -136,3 +136,28 @@ Pricing shows the **Free Preview**: $0 now, with the later prices struck through
 3. **Inboxes.** privacy@ and beta@escapeapp.ai need to exist, or change the links.
 4. **Indiegogo.** Replace the placeholder `LINKS.indiegogo` with the campaign URL.
 5. **Innerverse screenshots.** Drop real world renders into the six "shot" image slots on InnerversePage (or tell Claude and they can be added to the code).
+
+## Page text for search engines and AI crawlers (Nov 12)
+
+The site is drawn by JavaScript, so on its own the published HTML has no text. `EscapeSite.loader.tsx` now carries the text of every page (headings, paragraphs, lists and links). Framer pre-renders it into the HTML, so crawlers that do not run JavaScript can read each page. Visitors see the navy loading screen and then the site, as before. If the bundle fails to load, the text version shows instead of an error.
+
+- `EscapeSite.loader.tsx`: paste into the `EscapeSite` code file in Framer (about 39 KB).
+- `EscapeSite.loader.lite.tsx`: smaller version (about 27 KB) with the legal pages cut to title and summary. Use it only if Framer refuses to save the full file.
+- `EscapeSite.loader.v1.tsx`: the loader that was live before this change.
+- `geo/`: the scripts that build the text from the site source and test the loader. See `geo/README.md`. Re-run them and paste the loader again when the wording of the site changes.
+
+**Every address needs the component.** Put `EscapeSite` on each Framer page and set **Show page**: `/` Home, `/lucille-ai` Lucille AI, `/community` Marketplace, `/pricing` Pricing, `/innerverse` Innerverse, `/beta-test` App testing, `/demo-app` App demo, `/privacy-policy` Privacy, `/terms` Terms, `/safety` Safety, `/delete-account` Delete account, `/consumer-health-data` Health data, `/cookie-policy` Cookies. In the browser the address decides the page, so `/community` opens Marketplace even if the setting was left on Home, and only the home page opens with the orb gate.
+
+State on Nov 12 before the change: only `/` ran the new site; `/lucille-ai`, `/community`, `/pricing`, `/innerverse`, `/beta-test`, `/demo-app` and `/privacy-policy` still served the old native Framer pages, and `/terms`, `/safety`, `/delete-account`, `/cookie-policy` and `/consumer-health-data` returned Framer's 404.
+
+## Bundle of Nov 12
+
+`media/site/escape-site.js` (280,746 bytes) is built from `EscapeSite.tsx` and replaces the Nov 11 bundle once uploaded. What changed:
+
+- **Wording.** The orb gate and the arrival banner no longer say "7 days free" or "3-minute video". They now say the pass is free during the preview and that the demo is 90 seconds in five chapters.
+- **Phone menu.** The menu sheet lost its position and background to the glass style, so the page showed through it and its right edge was cut off. It now sits under the nav bar with a solid background, and the page behind it does not scroll while it is open.
+- **The Nov 9 phone fixes**, which were in the source but had never been uploaded: buttons wrap on narrow screens, larger tap targets in the footer, a "Follow Escape" heading over the social links, readable form fields in the day theme.
+
+Upload (Cloud Shell): remove old copies with `rm -f ~/escape-site*.js`, upload `media/site/escape-site.js`, check `ls -l ~/escape-site.js` shows 280746, then
+`gcloud storage cp ~/escape-site.js gs://escape-self-care-505618-escape-media/web/site/escape-site.js --cache-control="public,max-age=300"`.
+To go back, upload the previous file from git: `git show 5b0bafd:media/site/escape-site.js > escape-site-prev.js`.
