@@ -150,6 +150,19 @@ The site is drawn by JavaScript, so on its own the published HTML has no text. `
 
 State on Nov 12 before the change: only `/` ran the new site; `/lucille-ai`, `/community`, `/pricing`, `/innerverse`, `/beta-test`, `/demo-app` and `/privacy-policy` still served the old native Framer pages, and `/terms`, `/safety`, `/delete-account`, `/cookie-policy` and `/consumer-health-data` returned Framer's 404.
 
+## Bundle of Nov 13
+
+`media/site/escape-site.js` (280,847 bytes) is built from `EscapeSite.tsx` and replaces the Nov 12 bundle once uploaded. Only the legal pages changed:
+
+- **Privacy Policy** (updated Nov 13): the app-store age signal is used only to confirm you are 18 or older, and "Children and teens" is now "Adults only".
+- **Safety & Crisis Protocol** (updated Nov 13): typed messages are checked on the phone before they leave it, and the phone checks the transcript of spoken ones. On the servers every message is checked before Lucille's AI writes a reply; spoken messages are transcribed by OpenAI first. Two lines the app doesn't do for adults came out: the break suggestion (teen-only in the app) and the refusal of romantic and sexual content (not in Lucille's prompts).
+- `EscapeSite.loader.tsx` and the lite version were regenerated with `geo/regen.sh` (all tests pass). Paste the full loader into Framer and publish so crawlers read the new wording.
+- `legal/*.pdf` were printed again from the same text, so they match the site.
+
+Upload (Cloud Shell): remove old copies with `rm -f ~/escape-site*.js`, upload `media/site/escape-site.js`, check `ls -l ~/escape-site.js` shows 280847, then
+`gcloud storage cp ~/escape-site.js gs://escape-self-care-505618-escape-media/web/site/escape-site.js --cache-control="public,max-age=300"`.
+To go back, upload the Nov 12 file from git: `git show 1b37ab9:media/site/escape-site.js > escape-site-prev.js`.
+
 ## Bundle of Nov 12
 
 `media/site/escape-site.js` (280,746 bytes) is built from `EscapeSite.tsx` and replaces the Nov 11 bundle once uploaded. What changed:

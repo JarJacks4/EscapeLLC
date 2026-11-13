@@ -3,7 +3,7 @@
 // It also carries the text of every page, so the HTML Framer publishes has real headings, paragraphs
 // and links before any JavaScript runs. Search engines and AI crawlers that do not run JavaScript
 // read that text, and it is what shows if scripts are blocked or the bundle fails to load.
-// The text is generated from the site source (EscapeLLC/geo). Text built: 2026-11-12 (lite: legal pages carry their title and summary only)
+// The text is generated from the site source (EscapeLLC/geo). Text built: 2026-11-13 (lite: legal pages carry their title and summary only)
 import * as React from "react"
 import * as JSX from "react/jsx-runtime"
 import * as Framer from "framer"
@@ -80,10 +80,10 @@ const PACKED =
     "p9pNBNGpy7q3qEKprhQFRY6iVXP7yjW9AGEObjgmjSaxokP5YtM5Qp0+k6HY1SDLHZxObsGhfAKDeSuiPWiVrnfG80kPzf0cG0o/oxpqDjIR4uFvmaQmqzMl467ist1y2O1xOg0glltXuwfFMipopV49KZoCMpRJ" +
     "4YqLfc7zQ/GIcYid2VgYfeBw451OCeye8BzOxYLaxQyFpZ5a7oifga98cG4+Va88NJc3NZ6Uu3vgbSEyhw7QjefhMqHZ7xR84CTi2mLTsL+FIIp4Jq1XHOJHHD1bHlHSy6kXiH2q7+mIhAPH2uZPFtUhuycqFmfM" +
     "3na4bOZ1Y7cD7ihV+15PfS4kckO/KOqfYhF8PknxDx4my+EAidDsBNn0vaIOuywd2zss9mDD2/vbjo4l8mf/1NgiXnhtt/d9eQRCrKB5no5D3VmkqJeYlO1sSijlHuTc265i6qilQxX4PIq061kwZd/f91j6xs9w" +
-    "A+kCMz1luoi7xjtoED4ikaMmfvsjujAzwxKDonju+bwf47sybq4S0MXsFMYbQ5jGfNi4F+7g43ga5lc+HdXw+847ijiF+CFYpzPCjvnYvnoU7yJ+YSP7BnV36BsZoHkivkcNwebq4+NKnDw8yS01UTRfonnvHZ3z" +
+    "A+kCMz1luoi7xjtoED4ikaMmfvsjujAzwxKDonju+bwf47sybq4S0MXsFMYbQ5jGfNi4F+7g43ga5lc+HdXw+847ijiF+CFYpzPCjvnYvnoU7yJ+YSP7BnV36BsZoHkivkcNwebq49NKnDw8yS01UTRfonnvHZ3z" +
     "8ubNRXFseDyjj0Ll2mrN4UqqBomPGzo0IljB/SlbSBAsQtVInsR25eSvG//rVTX7DdW3NlH3sYeX6rVTqT+1G69BYOxaCLNX8eSQz/G0tdDuLeqFNX5A7uw1XRcv5ESx3bK0J59gZXk0cbUMt9T0zm6mMpWqINtr" +
-    "azxxpB9mC45ZDP730GrzlTXYFalW/CIWO1L48kfWMoDr/N5SXuOv+IYrPhngEy7j7xkkHkIZ9rXoin5OZ/QxBn3nbLC11f+xjacz82wHyNZhhemSzpp1yt9MUMcHG9kSPpWHHEQEyViMhWiBDj+kc62o9d8pPK8F" +
-    "E1hUyYVGEJmQZoNHez/lQqEsB5gqDny2Turq/30Ly+p7zoq7t74Hzrb8XxaE2tobBf6A6uPvH2dO/8Nj/B8="
+    "azxxpB9mC45ZDP730GrzlTXYFalW/CIWO1L48kfWMoDr/N5SXuOv+IYrPhngEy7j7xkkHkIZ9rXoin5OZ/QxBn3nbLC11f85naJD82wHSNdhiemSDpt1yt9MWMcHG+kSPpaHPEREyViNhXCBTj+kg62o998pPLAF" +
+    "M1hUyoVWEKmQZoNnez/lSqEsCJgrDny4Tmrr/30ry/p7zpq7t8AHDrf8X5aE2tobBf6A7uPvH2dP/8Nj/B8="
 const NAV = "<nav aria-label=\"Escape pages\"><a href=\"/\">Home</a> &#183; <a href=\"/lucille-ai\">Lucille AI</a> &#183; <a href=\"/community\">Marketplace</a> &#183; <a href=\"/pricing\">Pricing</a> &#183; <a href=\"/innerverse\">Innerverse</a> &#183; <a href=\"/beta-test\">App testing</a> &#183; <a href=\"/demo-app\">App demo</a></nav>"
 const FOOT = "<footer><p><a href=\"/privacy-policy\">Privacy Policy</a> &#183; <a href=\"/consumer-health-data\">Consumer Health Data</a> &#183; <a href=\"/terms\">Terms of Service</a> &#183; <a href=\"/safety\">Safety</a> &#183; <a href=\"/cookie-policy\">Cookie Policy</a> &#183; <a href=\"/delete-account\">Delete your account</a></p><p><a href=\"https://discord.gg/WnASA2SfA\">Discord</a> &#183; <a href=\"https://escape-influencer.web.app/\">Influencer program</a> &#183; <a href=\"https://www.indiegogo.com/\">Back us on Indiegogo</a> &#183; <a href=\"mailto:hello@escapeapp.ai\">Contact</a> &#183; <a href=\"https://www.instagram.com/escapeselfcare\">Instagram</a> &#183; <a href=\"https://www.tiktok.com/@escapeselfcare\">TikTok</a> &#183; <a href=\"https://www.facebook.com/profile.php?id=61596011750533\">Facebook</a> &#183; <a href=\"https://www.linkedin.com/company/escapeappai/\">LinkedIn</a></p><p>Escape is a self-care app from Escape Enterprises LLC. It is not therapy or medical care.</p></footer>"
 
