@@ -1695,6 +1695,15 @@ const __SiteFooter = (() => {
         facebookUrl: string
     }
 
+    // Font Awesome Free 7.3.1 brand icons by @fontawesome (https://fontawesome.com). Icons: CC BY 4.0
+    // (https://fontawesome.com/license/free). Path data copied unchanged from @fortawesome/free-brands-svg-icons.
+    const BRAND_ICONS: Record<string, { w: number; h: number; d: string }> = {
+        Instagram: { w: 448, h: 512, d: "M224.3 141a115 115 0 1 0 -.6 230 115 115 0 1 0 .6-230zm-.6 40.4a74.6 74.6 0 1 1 .6 149.2 74.6 74.6 0 1 1 -.6-149.2zm93.4-45.1a26.8 26.8 0 1 1 53.6 0 26.8 26.8 0 1 1 -53.6 0zm129.7 27.2c-1.7-35.9-9.9-67.7-36.2-93.9-26.2-26.2-58-34.4-93.9-36.2-37-2.1-147.9-2.1-184.9 0-35.8 1.7-67.6 9.9-93.9 36.1s-34.4 58-36.2 93.9c-2.1 37-2.1 147.9 0 184.9 1.7 35.9 9.9 67.7 36.2 93.9s58 34.4 93.9 36.2c37 2.1 147.9 2.1 184.9 0 35.9-1.7 67.7-9.9 93.9-36.2 26.2-26.2 34.4-58 36.2-93.9 2.1-37 2.1-147.8 0-184.8zM399 388c-7.8 19.6-22.9 34.7-42.6 42.6-29.5 11.7-99.5 9-132.1 9s-102.7 2.6-132.1-9c-19.6-7.8-34.7-22.9-42.6-42.6-11.7-29.5-9-99.5-9-132.1s-2.6-102.7 9-132.1c7.8-19.6 22.9-34.7 42.6-42.6 29.5-11.7 99.5-9 132.1-9s102.7-2.6 132.1 9c19.6 7.8 34.7 22.9 42.6 42.6 11.7 29.5 9 99.5 9 132.1s2.7 102.7-9 132.1z" },
+        TikTok: { w: 448, h: 512, d: "M448.5 209.9c-44 .1-87-13.6-122.8-39.2l0 178.7c0 33.1-10.1 65.4-29 92.6s-45.6 48-76.6 59.6-64.8 13.5-96.9 5.3-60.9-25.9-82.7-50.8-35.3-56-39-88.9 2.9-66.1 18.6-95.2 40-52.7 69.6-67.7 62.9-20.5 95.7-16l0 89.9c-15-4.7-31.1-4.6-46 .4s-27.9 14.6-37 27.3-14 28.1-13.9 43.9 5.2 31 14.5 43.7 22.4 22.1 37.4 26.9 31.1 4.8 46-.1 28-14.4 37.2-27.1 14.2-28.1 14.2-43.8l0-349.4 88 0c-.1 7.4 .6 14.9 1.9 22.2 3.1 16.3 9.4 31.9 18.7 45.7s21.3 25.6 35.2 34.6c19.9 13.1 43.2 20.1 67 20.1l0 87.4z" },
+        Facebook: { w: 512, h: 512, d: "M512 256C512 114.6 397.4 0 256 0S0 114.6 0 256C0 376 82.7 476.8 194.2 504.5l0-170.3-52.8 0 0-78.2 52.8 0 0-33.7c0-87.1 39.4-127.5 125-127.5 16.2 0 44.2 3.2 55.7 6.4l0 70.8c-6-.6-16.5-1-29.6-1-42 0-58.2 15.9-58.2 57.2l0 27.8 83.6 0-14.4 78.2-69.3 0 0 175.9C413.8 494.8 512 386.9 512 256z" },
+        LinkedIn: { w: 448, h: 512, d: "M416 32L31.9 32C14.3 32 0 46.5 0 64.3L0 447.7C0 465.5 14.3 480 31.9 480L416 480c17.6 0 32-14.5 32-32.3l0-383.4C448 46.5 433.6 32 416 32zM135.4 416l-66.4 0 0-213.8 66.5 0 0 213.8-.1 0zM102.2 96a38.5 38.5 0 1 1 0 77 38.5 38.5 0 1 1 0-77zM384.3 416l-66.4 0 0-104c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9l0 105.8-66.4 0 0-213.8 63.7 0 0 29.2 .9 0c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9l0 117.2z" },
+    }
+
     /**
      */
     function SiteFooter(p: Props) {
@@ -1714,10 +1723,10 @@ const __SiteFooter = (() => {
                             <p className="esc-p" style={{ maxWidth: 340 }}>{p.tagline}</p>
                             <StoreBadges appStoreUrl={p.appStoreUrl || undefined} playUrl={p.playUrl || undefined} />
                             {(() => {
-                                // Official icons are uploaded in Framer (from each platform's brand resources), never redrawn.
-                                // With all icons in place the footer shows a row of round icon buttons; until then, named chips.
+                                // Icons: Font Awesome Free brand icons (CC BY 4.0), used exactly as published, never redrawn.
+                                // An icon image uploaded for a network (instagramIcon etc.) still takes its place.
                                 const socials = ([["Instagram", p.instagramUrl, p.instagramIcon], ["TikTok", p.tiktokUrl, p.tiktokIcon], ["Facebook", p.facebookUrl, p.facebookIcon], ["LinkedIn", p.linkedinUrl, p.linkedinIcon]] as [string, string, any][]).filter(([, url]) => !!url)
-                                const iconsOnly = socials.length > 0 && socials.every(([, , icon]) => !!src(icon))
+                                const iconsOnly = socials.length > 0 && socials.every(([name, , icon]) => !!src(icon) || !!BRAND_ICONS[name])
                                 return (
                                     <div className="foot-soc-wrap">
                                         <h2 className="esc-over" style={{ margin: 0 }}>Follow Escape</h2>
@@ -1727,7 +1736,7 @@ const __SiteFooter = (() => {
                                                 return (
                                                     <li key={name}>
                                                         <a className="foot-soc" href={url} target="_blank" rel="noopener noreferrer" aria-label={iconsOnly ? `${name} (opens in a new tab)` : undefined} title={iconsOnly ? name : undefined} onClick={() => track("Contact", { content_name: name.toLowerCase(), placement: "footer_social" })}>
-                                                            {img ? <img src={img} alt="" width={iconsOnly ? 22 : 18} height={iconsOnly ? 22 : 18} /> : null}
+                                                            {img ? <img src={img} alt="" width={iconsOnly ? 22 : 18} height={iconsOnly ? 22 : 18} /> : BRAND_ICONS[name] ? <svg viewBox={`0 0 ${BRAND_ICONS[name].w} ${BRAND_ICONS[name].h}`} width={20} height={20} fill="currentColor" aria-hidden="true" focusable="false"><path d={BRAND_ICONS[name].d} /></svg> : null}
                                                             {!iconsOnly && <span>{name}</span>}
                                                             {!iconsOnly && <span className="esc-sr"> (opens in a new tab)</span>}
                                                         </a>
@@ -1772,6 +1781,7 @@ const __SiteFooter = (() => {
     .foot-social.icons{display:flex;flex-wrap:wrap;gap:10px}
     .foot-social.icons .foot-soc{width:44px;height:44px;padding:0;justify-content:center}
     .foot-social.icons .foot-soc img{width:22px;height:22px;object-fit:contain;border-radius:0}
+    .foot-social.icons .foot-soc svg{width:20px;height:20px;display:block;flex:none}
     .foot-soc{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid var(--esc-line);background:rgba(255,255,255,.06);color:var(--esc-ink);font-size:14px;font-weight:600;text-decoration:none;transition:background .2s,border-color .2s,transform .2s}
     .foot-soc:hover{background:rgba(255,255,255,.12);border-color:rgba(185,163,240,.6);transform:translateY(-1px)}
     .foot-soc:focus-visible{outline:2px solid rgba(185,163,240,.9);outline-offset:2px}
@@ -3558,7 +3568,6 @@ const __BetaPage = (() => {
                             <div className="esc-row" style={{ gap: 10 }}>
                                 <Button href={p.discordUrl} newTab arrow onClick={() => track("Contact", { content_name: "discord", placement: "beta_card" })}>Join the Discord</Button>
                                 <Button href={p.mazeUrl} variant="ghost" newTab>Try a Maze study</Button>
-                                <Button href={p.indiegogoUrl} variant="ghost" newTab onClick={() => track("IndiegogoClick", { placement: "beta_card" })}>Back us on Indiegogo</Button>
                             </div>
                         </Reveal>
                     </div>
